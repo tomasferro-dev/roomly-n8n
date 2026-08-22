@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
     "agent:chat": "tsx scripts/agent-chat.ts",
-    "agent:check": "tsx scripts/agent-check.ts"
+    "agent:check": "tsx scripts/agent-check.ts",
+    "agent:tools": "tsx scripts/agent-tools-check.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
