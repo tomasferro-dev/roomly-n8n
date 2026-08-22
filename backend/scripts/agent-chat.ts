@@ -180,6 +180,13 @@ async function main() {
 main()
   .catch((err) => {
     console.error(C.red("\nError fatal:"), err);
-    process.exit(1);
+    process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => {
+    await prisma.$disconnect();
+    // Salida explícita: importar las herramientas arrastra `lib/queue.ts`, que
+    // abre una conexión de BullMQ a Redis y mantiene vivo el event loop. Sin
+    // esto el script termina de imprimir y se queda colgado. Desaparece en la
+    // Fase 3, cuando se saca BullMQ.
+    process.exit(process.exitCode ?? 0);
+  });
