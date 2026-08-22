@@ -149,6 +149,62 @@ async function resolveRoomId(raw: string, hotelId: string): Promise<string> {
   return room?.id ?? raw;
 }
 
+/**
+ * Reserva ya pendiente de pago para el mismo huésped, habitación y fechas.
+ *
+ * Devuelve el mismo shape que `crear_reserva`, reconstruyendo la URL de
+ * checkout desde el id de preferencia (Mercado Pago la arma siempre igual;
+ * la URL no se guarda en la tabla Payment). Si el pago ya venció o no está
+ * pendiente, devuelve null y se crea una reserva nueva.
+ */
+async function buscarReservaPendiente(
+  phone: string,
+  roomId: string,
+  checkIn: string,
+  checkOut: string
+) {
+  const reserva = await prisma.reservation.findFirst({
+    where: {
+      roomId,
+      status: "PENDING_PAYMENT",
+      checkIn: new Date(checkIn),
+      checkOut: new Date(checkOut),
+      guest: { phone },
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      payment: true,
+      hotel: { select: { email: true, phone: true } },
+    },
+  });
+
+  const pago = reserva?.payment;
+  if (!reserva || !pago) return null;
+  if (pago.status !== "PENDING" || pago.expiresAt <= new Date()) return null;
+  if (!pago.mpPreferenceId) return null;
+
+  const nights = Math.round(
+    (reserva.checkOut.getTime() - reserva.checkIn.getTime()) / 86400000
+  );
+  const payAmount = Number(pago.amount);
+  const totalPrice =
+    pago.paymentType === "DEPOSIT" ? Math.round(payAmount / 0.15) : payAmount;
+
+  return {
+    code: reserva.code,
+    status: reserva.status,
+    paymentUrl: `https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=${pago.mpPreferenceId}`,
+    payAmount,
+    totalPrice,
+    paymentType: pago.paymentType,
+    expiresAt: pago.expiresAt,
+    hotelEmail: reserva.hotel.email,
+    hotelPhone: reserva.hotel.phone,
+    nights,
+    yaExistia: true,
+  };
+}
+
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
 const handlers: Record<string, ToolHandler> = {
@@ -187,6 +243,17 @@ const handlers: Record<string, ToolHandler> = {
     }
 
     const roomId = await resolveRoomId(roomIdRaw, ctx.hotelId);
+
+    // Idempotencia. El modelo a veces llama a esta herramienta dos veces con
+    // los mismos datos: se adelanta y crea la reserva antes de que el huésped
+    // elija seña o total, y cuando el huésped responde vuelve a llamarla. La
+    // segunda choca contra la primera ("no disponible") y deja una reserva
+    // huérfana en PENDING_PAYMENT bloqueando la habitación hasta que expire.
+    //
+    // Un pedido repetido con los mismos datos es la MISMA reserva, no otra:
+    // devolvemos la que ya existe con su link de pago original.
+    const existente = await buscarReservaPendiente(ctx.phone, roomId, checkIn, checkOut);
+    if (existente) return existente;
 
     const parsed = CreateReservationSchema.safeParse({
       hotelId: ctx.hotelId,

@@ -164,6 +164,35 @@ async function main() {
         "ok"
       )) as { code?: string; paymentUrl?: string };
 
+      // El modelo a veces pide crear la reserva dos veces con los mismos datos.
+      // La segunda tiene que devolver LA MISMA reserva, no chocar contra ella.
+      const repetida = (await probar(
+        "crear_reserva repetida devuelve la misma reserva",
+        "crear_reserva",
+        {
+          roomId: room.id,
+          guestName: "Prueba Agente",
+          checkIn,
+          checkOut,
+          numGuests: 2,
+          paymentType: "DEPOSIT",
+        },
+        ctx,
+        "ok"
+      )) as { code?: string; yaExistia?: boolean };
+
+      if (repetida.code !== creada.code) {
+        fallos++;
+        console.log(
+          C.red(`    ✗ devolvió ${repetida.code} en vez de ${creada.code} — se duplicó la reserva`)
+        );
+      } else if (!repetida.yaExistia) {
+        fallos++;
+        console.log(C.red("    ✗ no marcó yaExistia"));
+      } else {
+        console.log(C.green(`    ✓ misma reserva (${repetida.code}), sin duplicar`));
+      }
+
       if (creada.code) {
         const detalle = (await probar(
           `consultar_reserva ${creada.code}`,

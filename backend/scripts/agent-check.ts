@@ -57,6 +57,11 @@ check("interpola el telefono", prompt.includes("TELÉFONO DEL HUÉSPED: 54935100
 check("interpola la fecha local", prompt.includes("HOY: 2026-09-15T22:30:00-03:00"), true);
 check("conserva las reglas del prompt de n8n", prompt.includes("consultar_habitaciones(checkIn, checkOut)"), true);
 
+// Reglas de formato para WhatsApp: el modelo tiraba Markdown (**negrita**,
+// viñetas con "*   ") que WhatsApp muestra literal.
+check("el prompt prohibe el doble asterisco", prompt.includes("NUNCA uses **doble asterisco**"), true);
+check("el prompt da el ejemplo de lista sin viñetas", prompt.includes("*Hab. 101* – Standard"), true);
+
 // normalizeHistory: Gemini exige que el historial abra con un turno de usuario.
 const u = (t: string) => ({ role: "user", parts: [{ text: t }] });
 const m = (t: string) => ({ role: "model", parts: [{ text: t }] });

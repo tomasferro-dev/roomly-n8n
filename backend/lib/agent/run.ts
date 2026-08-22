@@ -35,6 +35,18 @@ const MAX_ITERATIONS = 6;
 const MAX_RETRIES = 2;
 const RETRY_BASE_MS = 600;
 
+/**
+ * Tope de espera cuando Gemini nos dice cuánto falta para reintentar.
+ *
+ * El tier gratuito permite 15 requests por minuto y, al pasarse, responde 429
+ * con un `retryDelay` que suele ser de 30-40 s. Reintentar a los 600 ms como
+ * hace el backoff exponencial es inútil: vuelve a rebotar y quema el intento.
+ * Pero tampoco tiene sentido esperar un minuto — del otro lado hay un huésped
+ * mirando WhatsApp. Si la espera pedida supera este tope, fallamos derecho y
+ * el huésped recibe el mensaje de disculpa.
+ */
+const RETRY_MAX_WAIT_MS = 20_000;
+
 let client: GoogleGenAI | null = null;
 
 function getClient(): GoogleGenAI {
@@ -56,7 +68,29 @@ function isTransient(err: unknown): boolean {
   return /429|50\d|timeout|ECONNRESET|fetch failed|overloaded|UNAVAILABLE/i.test(message);
 }
 
+/**
+ * Espera que pide la propia API, en ms, o `null` si no la indicó.
+ *
+ * Gemini adjunta un `RetryInfo` con `retryDelay: "40s"` dentro de `details`.
+ * El SDK entrega ese cuerpo como texto en `error.message`, así que hay que
+ * parsearlo. Respetarlo evita reintentar justo cuando sabemos que va a fallar.
+ */
+function retryAfterMs(err: unknown): number | null {
+  const message = err instanceof Error ? err.message : String(err);
+  const match = message.match(/"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/);
+  return match ? Math.ceil(Number(match[1]) * 1000) : null;
+}
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Concatena las partes de texto de un turno, ignorando las de functionCall. */
+function textoDePartes(parts: { text?: string }[] | undefined): string | null {
+  const texto = (parts ?? [])
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
+  return texto === "" ? null : texto;
+}
 
 export type RunAgentOptions = {
   /** Historial precargado. Si se omite, se lee de la tabla Message. */
@@ -123,7 +157,12 @@ export async function runAgent(
       outputTokens += response.usageMetadata?.candidatesTokenCount ?? 0;
 
       const calls = response.functionCalls ?? [];
-      const text = response.text?.trim() || null;
+      // Cuando la respuesta trae functionCall, el getter `.text` del SDK emite
+      // un warning por consola en cada turno. Leemos las partes a mano.
+      const text =
+        calls.length === 0
+          ? response.text?.trim() || null
+          : textoDePartes(response.candidates?.[0]?.content?.parts);
 
       steps.push({
         kind: "model",
@@ -150,22 +189,47 @@ export async function runAgent(
       const modelTurn = response.candidates?.[0]?.content;
       if (modelTurn) contents.push(modelTurn);
 
+      // Gemini puede emitir varias functionCall en una misma respuesta, y a
+      // veces repite la misma con idénticos argumentos. Con una herramienta que
+      // muta — crear_reserva — ejecutarlas todas crea DOS reservas: la segunda
+      // choca contra la primera y devuelve "no disponible", dejando una huérfana
+      // en PENDING_PAYMENT que bloquea la habitación. Pasó al verificar.
+      // Una llamada repetida es la misma pregunta: se ejecuta una vez y se
+      // devuelve el mismo resultado a las dos.
+      const yaEjecutadas = new Map<string, unknown>();
       const responseParts = [];
+
       for (const call of calls) {
         const name = call.name ?? "";
         const args = (call.args ?? {}) as Record<string, unknown>;
-        const toolStart = Date.now();
+        const huella = `${name}:${JSON.stringify(args)}`;
 
-        const { result, ok } = await executeTool(name, args, ctx);
+        let result: unknown;
+        if (yaEjecutadas.has(huella)) {
+          result = yaEjecutadas.get(huella);
+          steps.push({
+            kind: "tool",
+            name,
+            args,
+            result,
+            ok: true,
+            durationMs: 0,
+          });
+        } else {
+          const toolStart = Date.now();
+          const ejecucion = await executeTool(name, args, ctx);
+          result = ejecucion.result;
+          yaEjecutadas.set(huella, result);
 
-        steps.push({
-          kind: "tool",
-          name,
-          args,
-          result,
-          ok,
-          durationMs: Date.now() - toolStart,
-        });
+          steps.push({
+            kind: "tool",
+            name,
+            args,
+            result,
+            ok: ejecucion.ok,
+            durationMs: Date.now() - toolStart,
+          });
+        }
 
         responseParts.push(
           createPartFromFunctionResponse(call.id ?? "", name, {
@@ -222,7 +286,13 @@ async function generateWithRetry(
     } catch (err) {
       lastError = err;
       if (!isTransient(err) || attempt === MAX_RETRIES) break;
-      await sleep(RETRY_BASE_MS * 2 ** attempt);
+
+      // Si la API dijo cuánto esperar, mandamos eso; si pide más de lo que
+      // estamos dispuestos a hacer esperar al huésped, cortamos acá.
+      const pedido = retryAfterMs(err);
+      if (pedido !== null && pedido > RETRY_MAX_WAIT_MS) break;
+
+      await sleep(pedido ?? RETRY_BASE_MS * 2 ** attempt);
     }
   }
 

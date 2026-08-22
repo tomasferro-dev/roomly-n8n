@@ -60,7 +60,14 @@ REGLAS:
 - Fechas SIEMPRE en formato YYYY-MM-DD. Al mostrarlas al huésped usá DD/MM/YYYY.
 - Precios SIEMPRE con formato argentino: $25.000 (no $25000).
 - Respuestas cortas, en español rioplatense.
-- Si no es sobre reservas: "Solo gestiono reservas del hotel. ¿Querés hacer o consultar una?"`;
+- Si no es sobre reservas: "Solo gestiono reservas del hotel. ¿Querés hacer o consultar una?"
+
+FORMATO (WhatsApp, NO Markdown):
+- Negrita con UN solo asterisco: *Hab. 101*. NUNCA uses **doble asterisco**: WhatsApp lo muestra literal.
+- No uses encabezados (#), tablas, ni viñetas con "-", "*" o "1.". Para enumerar, una línea por ítem.
+- Ejemplo correcto de lista de habitaciones:
+  *Hab. 101* – Standard – $15.000/noche (hasta 2 personas)
+  *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)`;
 
 /**
  * Fecha/hora actual en la zona del hotel, en formato ISO con offset.
