@@ -12,6 +12,7 @@
 import "dotenv/config";
 import { nowInTimezone, buildSystemPrompt, DEFAULT_SYSTEM_PROMPT } from "../lib/agent/prompt";
 import { normalizeHistory } from "../lib/agent/memory";
+import { extraerMensaje, normalizarDestinatario } from "../lib/channels/whatsapp";
 
 const TZ = "America/Argentina/Buenos_Aires";
 let fail = 0;
@@ -73,6 +74,46 @@ check("deja intacto un historial que ya abre en user",
   ["user", "model"]);
 check("historial todo-modelo queda vacio", normalizeHistory([m("a"), m("b")]), []);
 check("historial vacio", normalizeHistory([]), []);
+
+// ─── Canal de WhatsApp ────────────────────────────────────────────────────────
+// Payloads con la forma real que manda Meta al webhook.
+
+const sobre = (value: unknown) => ({ entry: [{ changes: [{ value }] }] });
+
+const mensajeTexto = sobre({
+  metadata: { phone_number_id: "123456789" },
+  messages: [{ id: "wamid.ABC", from: "5493510000000", type: "text", timestamp: "1755880000", text: { body: "hola" } }],
+});
+
+check("extrae un mensaje de texto",
+  extraerMensaje(mensajeTexto),
+  { messageId: "wamid.ABC", phoneNumberId: "123456789", from: "5493510000000", text: "hola", timestamp: "1755880000" });
+
+// Meta envuelve el payload cuando llega vía un proxy; n8n contemplaba las dos formas.
+check("acepta el payload envuelto en body",
+  extraerMensaje({ body: mensajeTexto })?.text, "hola");
+
+// Los avisos de entrega y lectura llegan al MISMO webhook. Procesarlos como
+// mensajes haría que el bot se conteste a sí mismo.
+check("ignora los avisos de estado (statuses)",
+  extraerMensaje(sobre({ metadata: { phone_number_id: "1" }, statuses: [{ id: "wamid.X", status: "delivered" }] })),
+  null);
+
+check("ignora mensajes que no son texto (audio, imagen)",
+  extraerMensaje(sobre({ metadata: { phone_number_id: "1" }, messages: [{ id: "w", from: "54", type: "image", image: {} }] })),
+  null);
+
+check("ignora un texto vacio",
+  extraerMensaje(sobre({ metadata: { phone_number_id: "1" }, messages: [{ id: "w", from: "54", type: "text", text: { body: "   " } }] })),
+  null);
+
+check("tolera un payload sin forma conocida", extraerMensaje({ cualquiera: true }), null);
+check("tolera null", extraerMensaje(null), null);
+
+// La Cloud API argentina espera el numero SIN el 9 de movil.
+check("saca el 9 de los moviles argentinos", normalizarDestinatario("5493510000000"), "543510000000");
+check("no toca un fijo argentino", normalizarDestinatario("543510000000"), "543510000000");
+check("no toca numeros de otros paises", normalizarDestinatario("5491112345678".replace("549","34")), "341112345678");
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);

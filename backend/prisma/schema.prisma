@@ -337,3 +337,23 @@ enum AgentRunStatus {
   EMPTY // el modelo no devolvió texto (equivale al IF "¿Hay respuesta?" en NO)
   SKIPPED // mensaje duplicado o no procesable
 }
+
+// Deduplicación de webhooks entrantes.
+//
+// Meta reintenta la entrega de un mensaje si no recibe 200 dentro de ~20s, y
+// puede entregar el mismo mensaje más de una vez aunque hayamos respondido.
+// Sin esto el bot contesta dos veces al mismo mensaje — y peor, el agente
+// podría crear dos reservas.
+//
+// El unique compuesto es lo que hace la deduplicación atómica: se intenta
+// insertar ANTES de procesar, y si el insert viola el unique es que otro
+// proceso ya tomó ese evento. n8n no tenía esta protección.
+model ProcessedEvent {
+  id         String   @id @default(cuid())
+  provider   String // "WHATSAPP" | "MERCADOPAGO"
+  externalId String // message.id de Meta, o el id de pago de MP
+  receivedAt DateTime @default(now())
+
+  @@unique([provider, externalId])
+  @@index([receivedAt])
+}
