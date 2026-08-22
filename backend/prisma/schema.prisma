@@ -15,7 +15,7 @@ datasource db {
 // ─────────────────────────────────────────────
 
 enum ReservationStatus {
-  PENDING_PAYMENT  // reserva creada, esperando pago de seña/total
+  PENDING_PAYMENT // reserva creada, esperando pago de seña/total
   PENDING
   CONFIRMED
   CHECKED_IN
@@ -32,8 +32,8 @@ enum PaymentStatus {
 }
 
 enum PaymentType {
-  DEPOSIT  // seña del 15%
-  FULL     // total completo
+  DEPOSIT // seña del 15%
+  FULL // total completo
 }
 
 enum RoomStatus {
@@ -83,6 +83,7 @@ model Hotel {
   guests       Guest[]
   reservations Reservation[]
   ratePlans    RatePlan[]
+  botConfig    BotConfig?
 }
 
 model RoomType {
@@ -156,23 +157,23 @@ model Guest {
 }
 
 model Reservation {
-  id         String            @id @default(cuid())
+  id         String    @id @default(cuid())
   hotelId    String
-  hotel      Hotel             @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  hotel      Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
   roomId     String
-  room       Room              @relation(fields: [roomId], references: [id])
+  room       Room      @relation(fields: [roomId], references: [id])
   guestId    String
-  guest      Guest             @relation(fields: [guestId], references: [id])
+  guest      Guest     @relation(fields: [guestId], references: [id])
   // Titular de ESTA reserva. Se captura al crearla y es independiente del
   // nombre del Guest (que es el contacto de WhatsApp, único por teléfono).
   // Permite que un mismo número reserve a nombre de personas distintas.
   guestName  String?
   ratePlanId String?
-  ratePlan   RatePlan?         @relation(fields: [ratePlanId], references: [id])
+  ratePlan   RatePlan? @relation(fields: [ratePlanId], references: [id])
 
-  code       String            @unique
-  status     ReservationStatus @default(CONFIRMED)
-  channel    Channel           @default(WHATSAPP)
+  code    String            @unique
+  status  ReservationStatus @default(CONFIRMED)
+  channel Channel           @default(WHATSAPP)
 
   checkIn    DateTime @db.Date
   checkOut   DateTime @db.Date
@@ -247,14 +248,14 @@ model Payment {
   hotelId        String
   reservationId  String        @unique
   reservation    Reservation   @relation(fields: [reservationId], references: [id])
-  mpPreferenceId String?       // ID de la preferencia de MP (antes de pagar)
-  mpPaymentId    String?       // ID del pago en MP (después de pagar)
+  mpPreferenceId String? // ID de la preferencia de MP (antes de pagar)
+  mpPaymentId    String? // ID del pago en MP (después de pagar)
   amount         Decimal       @db.Decimal(10, 2)
   currency       String        @default("ARS")
   status         PaymentStatus @default(PENDING)
   paymentType    PaymentType
-  expiresAt      DateTime      // deadline de 24hs; pasado esto se auto-cancela
-  notifiedAt     DateTime?     // cuándo se envió el WhatsApp de confirmación
+  expiresAt      DateTime // deadline de 24hs; pasado esto se auto-cancela
+  notifiedAt     DateTime? // cuándo se envió el WhatsApp de confirmación
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -280,4 +281,59 @@ model Message {
 
   @@index([phone])
   @@index([phone, createdAt])
+}
+
+// ─── Agente ───────────────────────────────────────────────────────────────────
+
+// Configuración editable del bot. Reemplaza lo que antes se editaba a mano en el
+// editor visual de n8n: el system prompt, el modelo y sus parámetros. Se edita
+// desde /dashboard/configuracion/bot y toma efecto sin redeploy.
+//
+// Una fila por hotel. Si no existe, el agente usa los valores por defecto
+// versionados en lib/agent/prompt.ts.
+model BotConfig {
+  id              String   @id @default(cuid())
+  hotelId         String   @unique
+  hotel           Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  systemPrompt    String? // null → se usa DEFAULT_SYSTEM_PROMPT del código
+  model           String   @default("gemini-3.1-flash-lite")
+  temperature     Float    @default(0.1)
+  maxOutputTokens Int      @default(512)
+  memoryWindow    Int      @default(10) // turnos de contexto, equivale a contextWindowLength de n8n
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Traza completa de cada ejecución del agente. Reemplaza el historial de
+// ejecuciones de n8n: input, cada tool llamada con argumentos y resultado,
+// respuesta final, tokens y duración. Se consulta desde el dashboard y, a
+// diferencia del visor de n8n, es consultable con SQL.
+model AgentRun {
+  id           String         @id @default(cuid())
+  hotelId      String?
+  phone        String
+  channel      Channel        @default(WHATSAPP)
+  inboundText  String
+  outboundText String?
+  status       AgentRunStatus @default(OK)
+  error        String?
+  steps        Json           @default("[]") // AgentStep[] — ver lib/agent/types.ts
+  model        String
+  promptTokens Int?
+  outputTokens Int?
+  iterations   Int            @default(0)
+  durationMs   Int
+  createdAt    DateTime       @default(now())
+
+  @@index([phone, createdAt])
+  @@index([createdAt])
+  @@index([status])
+}
+
+enum AgentRunStatus {
+  OK
+  FAILED
+  EMPTY // el modelo no devolvió texto (equivale al IF "¿Hay respuesta?" en NO)
+  SKIPPED // mensaje duplicado o no procesable
 }
