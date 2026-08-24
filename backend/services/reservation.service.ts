@@ -1,16 +1,37 @@
 import { prisma } from "@/lib/prisma";
-import { reservationQueue } from "@/lib/queue";
-import { redis } from "@/lib/redis";
 import { isRoomAvailable } from "./availability.service";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from "@/lib/calendar";
 import type { CreateReservationInput, UpdateReservationInput } from "@/lib/validations";
-import { DASHBOARD_CHANNEL, type DashboardEvent } from "@/lib/events";
 
-/** Fire-and-forget publish. Never throws — Redis being down must not abort a reservation. */
-function publishEvent(event: DashboardEvent): void {
-  redis.publish(DASHBOARD_CHANNEL, JSON.stringify(event)).catch((err) => {
-    console.warn("[events] Redis publish failed:", err?.message);
-  });
+/**
+ * Crea la tarea de limpieza posterior al check-out.
+ *
+ * Antes era el job `SCHEDULE_HOUSEKEEPING` de BullMQ, pero encolarlo no tenía
+ * sentido: es un solo INSERT que tarda milisegundos. La cola sólo agregaba una
+ * dependencia de Redis y un lugar más donde las cosas se pueden perder.
+ *
+ * No lanza: una reserva no puede fallar porque no se pudo agendar la limpieza.
+ */
+export async function scheduleHousekeeping(reservationId: string): Promise<void> {
+  try {
+    const res = await prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { id: true, code: true, roomId: true, checkOut: true },
+    });
+    if (!res) return;
+
+    await prisma.housekeepingTask.create({
+      data: {
+        roomId: res.roomId,
+        reservationId: res.id,
+        scheduledFor: res.checkOut,
+        status: "PENDING",
+        notes: `Post-checkout – ${res.code}`,
+      },
+    });
+  } catch (err) {
+    console.warn("[housekeeping] no se pudo agendar la limpieza:", err);
+  }
 }
 
 // ─── Code generator ────────────────────────────────────────────────────────────
@@ -111,30 +132,17 @@ export async function createReservation(input: CreateReservationInput) {
     return res;
   });
 
-  // 5. Enqueue async jobs — solo si la reserva ya está CONFIRMED.
-  // Si es PENDING_PAYMENT, los jobs se encolan cuando MP confirme el pago.
+  // 5. Agendar la limpieza — solo si la reserva ya está CONFIRMED. Si es
+  // PENDING_PAYMENT, se agenda cuando MP confirme el pago.
+  //
+  // El job SEND_CONFIRMATION que existía acá se eliminó: nunca estuvo
+  // implementado (era un console.log con un TODO). La confirmación real al
+  // huésped la manda el agente por WhatsApp al crear la reserva.
   if (!paymentType) {
-    await Promise.allSettled([
-      reservationQueue.add("confirmation", {
-        type: "SEND_CONFIRMATION",
-        reservationId: reservation.id,
-      }),
-      reservationQueue.add("housekeeping", {
-        type: "SCHEDULE_HOUSEKEEPING",
-        reservationId: reservation.id,
-      }),
-    ]);
+    await scheduleHousekeeping(reservation.id);
   }
 
-  // 6. Notify dashboard via SSE (fire-and-forget)
-  publishEvent({
-    type: "NEW_RESERVATION",
-    code: reservation.code,
-    guestName: reservation.guestName ?? reservation.guest.name,
-    room: reservation.room.number,
-  });
-
-  // 7. Create Google Calendar event (fire-and-forget; failure does NOT abort the reservation)
+  // 6. Create Google Calendar event (fire-and-forget; failure does NOT abort the reservation)
   const calendarEventId = await createCalendarEvent({
     code:       reservation.code,
     guestName:  reservation.guestName ?? reservation.guest.name,
@@ -207,9 +215,6 @@ export async function updateReservation(
     return res;
   });
 
-  // Notify dashboard
-  publishEvent({ type: "RESERVATION_UPDATED", code: updated.code });
-
   // Update Google Calendar event if one exists
   if (current.calendarEventId) {
     await updateCalendarEvent(current.calendarEventId, {
@@ -252,9 +257,6 @@ export async function cancelReservation(id: string, performedBy = "admin") {
 
     return res;
   });
-
-  // Notify dashboard
-  publishEvent({ type: "RESERVATION_CANCELLED", code: current.code });
 
   // Remove Google Calendar event (fire-and-forget)
   if (current.calendarEventId) {

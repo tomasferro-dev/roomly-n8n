@@ -1,7 +1,8 @@
 import { Preference, Payment as MPPayment } from "mercadopago";
 import { mpClient } from "@/lib/mercadopago";
 import { prisma } from "@/lib/prisma";
-import { reservationQueue } from "@/lib/queue";
+import { scheduleHousekeeping } from "./reservation.service";
+import { enviarTexto } from "@/lib/channels/whatsapp";
 
 const BACKEND_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
@@ -86,12 +87,10 @@ export async function createPaymentPreference(
     },
   });
 
-  // Encolar auto-cancelación a las 24 h
-  await reservationQueue.add(
-    "expire_payment",
-    { type: "EXPIRE_PAYMENT", reservationId: reservation.id },
-    { delay: 24 * 60 * 60 * 1000, jobId: `expire-${reservation.id}` }
-  );
+  // La auto-cancelación a las 24 h ya no se encola: el deadline queda en
+  // Payment.expiresAt y el cron /api/cron/expire-payments barre los vencidos.
+  // Un job diferido en Redis se pierde si Redis se reinicia; una fecha en la
+  // base, no.
 
   return {
     paymentUrl:  mpResponse.init_point!,
@@ -155,21 +154,16 @@ export async function handleMPWebhook(mpPaymentId: string) {
       });
     });
 
-    // Encolar jobs que se saltaron al crear la reserva como PENDING_PAYMENT
-    await reservationQueue.add("payment_confirmed", {
-      type:          "SEND_PAYMENT_CONFIRMED",
-      reservationId,
+    // Lo que antes se encolaba al confirmarse el pago. Son dos operaciones
+    // cortas, así que van inline: una cola sólo agregaba latencia y una
+    // dependencia de Redis. Ya no hay job de auto-cancelación que borrar —
+    // el cron ignora los pagos que no siguen en PENDING.
+    await scheduleHousekeeping(reservationId);
+    await notifyPaymentConfirmed(reservationId, {
       mpPaymentId,
-      paymentType:   payment.paymentType,
-      amount:        Number(payment.amount),
+      paymentType: payment.paymentType,
+      amount:      Number(payment.amount),
     });
-    await reservationQueue.add("housekeeping", {
-      type: "SCHEDULE_HOUSEKEEPING",
-      reservationId,
-    });
-
-    // Eliminar el job de auto-cancelación (ya no hace falta)
-    await reservationQueue.remove(`expire-${reservationId}`).catch(() => null);
 
     console.log(`[MP webhook] Reserva ${reservationId} CONFIRMADA — pago ${mpPaymentId}`);
   }
@@ -208,4 +202,127 @@ export async function expirePayment(reservationId: string) {
   });
 
   console.log(`[Queue] Reserva ${reservationId} cancelada por falta de pago (24 h)`);
+}
+
+// ─── Notificación de pago acreditado ──────────────────────────────────────────
+
+/**
+ * Avisa al huésped que su pago se acreditó y la reserva quedó confirmada.
+ *
+ * Antes era el job `SEND_PAYMENT_CONFIRMED` de BullMQ, que además rebotaba el
+ * mensaje contra un webhook de n8n (`/webhook/payment-confirmed`) sólo para
+ * que n8n usara su credencial de WhatsApp. Ahora se manda directo.
+ *
+ * No lanza: si falla el aviso, el pago igual quedó acreditado y la reserva
+ * confirmada. `notifiedAt` queda en null, así se puede reintentar después.
+ */
+export async function notifyPaymentConfirmed(
+  reservationId: string,
+  info: { mpPaymentId: string; paymentType: string; amount: number }
+): Promise<void> {
+  try {
+    const res = await prisma.reservation.findUnique({
+      where: { id: reservationId },
+      include: {
+        guest: { select: { phone: true } },
+        room:  { select: { number: true } },
+        hotel: { select: { name: true } },
+      },
+    });
+    if (!res) return;
+
+    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    if (!phoneNumberId) {
+      console.warn("[pagos] WHATSAPP_PHONE_NUMBER_ID no configurado; no se avisó al huésped.");
+      return;
+    }
+
+    const typeLabel  = info.paymentType === "DEPOSIT" ? "seña (15%)" : "pago total";
+    const fmtFecha   = (d: Date) =>
+      d.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const msg =
+      `✅ ¡Pago recibido! Tu reserva *${res.code}* en ${res.hotel.name} está *confirmada*.\n` +
+      `🛏️ Hab. ${res.room.number} · Check-in: ${fmtFecha(res.checkIn)} · Check-out: ${fmtFecha(res.checkOut)}\n` +
+      `💰 Se acreditó tu ${typeLabel} de $${info.amount.toLocaleString("es-AR")}.\n\n` +
+      `¡Te esperamos! 🏨`;
+
+    await enviarTexto(phoneNumberId, res.guest.phone, msg);
+
+    await prisma.payment.update({
+      where: { reservationId },
+      data:  { notifiedAt: new Date() },
+    });
+  } catch (err) {
+    console.error("[pagos] no se pudo avisar del pago acreditado:", err);
+  }
+}
+
+// ─── Barrido de vencimientos (lo llama el cron) ───────────────────────────────
+
+/**
+ * Cancela las reservas que quedaron sin pagar.
+ *
+ * Reemplaza al job diferido a 24 h de BullMQ. Barrer por fecha es más robusto
+ * que programar un job: si el proceso que tenía que ejecutarlo se cayó, el job
+ * se pierde para siempre; una fecha en la base sigue ahí y el próximo barrido
+ * la levanta.
+ *
+ * Cubre dos casos:
+ *   1. Pagos vencidos — el equivalente directo del job viejo.
+ *   2. Reservas PENDING_PAYMENT SIN fila de Payment. Pasa si la preferencia de
+ *      Mercado Pago falla después de haberse creado la reserva: quedan
+ *      bloqueando la habitación sin que nada las limpie. Sin este barrido,
+ *      para siempre.
+ */
+export async function expirePendingPayments(): Promise<{
+  vencidas: number;
+  huerfanas: number;
+}> {
+  const ahora = new Date();
+
+  const vencidos = await prisma.payment.findMany({
+    where: { status: "PENDING", expiresAt: { lt: ahora } },
+    select: { reservationId: true },
+  });
+
+  for (const { reservationId } of vencidos) {
+    try {
+      await expirePayment(reservationId);
+    } catch (err) {
+      console.error(`[cron] no se pudo expirar ${reservationId}:`, err);
+    }
+  }
+
+  // Reservas huérfanas: PENDING_PAYMENT, sin Payment, y con margen suficiente
+  // como para descartar una que se esté creando justo en este momento.
+  const margen = new Date(ahora.getTime() - 30 * 60 * 1000);
+  const huerfanas = await prisma.reservation.findMany({
+    where: { status: "PENDING_PAYMENT", payment: null, createdAt: { lt: margen } },
+    select: { id: true, code: true },
+  });
+
+  for (const r of huerfanas) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.reservation.update({
+          where: { id: r.id },
+          data:  { status: "CANCELLED" },
+        });
+        await tx.auditLog.create({
+          data: {
+            reservationId: r.id,
+            action:      "PAYMENT_EXPIRED",
+            after:       { reason: "PENDING_PAYMENT sin preferencia de pago" } as object,
+            performedBy: "system",
+          },
+        });
+      });
+      console.log(`[cron] reserva huérfana ${r.code} cancelada`);
+    } catch (err) {
+      console.error(`[cron] no se pudo cancelar la huérfana ${r.code}:`, err);
+    }
+  }
+
+  return { vencidas: vencidos.length, huerfanas: huerfanas.length };
 }
