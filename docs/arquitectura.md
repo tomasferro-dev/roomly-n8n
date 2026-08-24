@@ -1,159 +1,172 @@
 # Roomly – Arquitectura del sistema
 
+Todo el sistema es una sola aplicación Next.js. No hay servicios auxiliares que
+levantar: ni n8n, ni Redis, ni ngrok, ni Docker. El stack anterior está
+archivado en [`legacy/`](legacy/README.md), con la tabla de equivalencias de
+dónde quedó cada pieza.
+
 ## Stack
 
-| Componente | Tecnología | Puerto |
-|------------|------------|--------|
-| Backend / Dashboard | Next.js 15 + Prisma + PostgreSQL | 3000 |
-| Bot WhatsApp | n8n + Gemini Flash | 5678 |
-| Cola de jobs | BullMQ + Redis | 6379 |
-| Base de datos | PostgreSQL (Docker) | 5433 |
-| Túnel público | ngrok (free static domain) | — |
+| Componente | Tecnología |
+|------------|------------|
+| Aplicación (API, dashboard, agente, canal) | Next.js 16 + Prisma |
+| Base de datos | PostgreSQL (Neon) |
+| IA | Google Gemini Flash Lite |
+| Canal | WhatsApp Cloud API |
+| Pagos | Mercado Pago |
+| Calendario | Google Calendar (espejo) |
+| Hosting | Vercel |
 
----
-
-## Estructura de carpetas
+## Estructura
 
 ```
 roomly-n8n/
-├── backend/                  # Next.js app (dashboard + API)
-│   ├── app/
-│   │   ├── dashboard/        # UI del dashboard (reservas, config, etc.)
-│   │   └── api/v1/           # API REST consumida por n8n
-│   ├── lib/
-│   │   ├── queue.ts          # BullMQ worker + jobs
-│   │   ├── mercadopago.ts    # Cliente singleton de MP
-│   │   └── prisma.ts         # Cliente Prisma
-│   ├── services/
-│   │   ├── reservation.service.ts
-│   │   └── payment.service.ts
-│   ├── prisma/
-│   │   └── schema.prisma
-│   └── instrumentation.ts    # Arranca el BullMQ worker al iniciar Next.js
-├── workflow.json             # Workflow de n8n (importar manualmente)
-├── docker-compose.yml        # PostgreSQL + Redis + n8n
-└── docs/                     # Esta carpeta
+└── backend/
+    ├── app/
+    │   ├── dashboard/                    UI del dashboard
+    │   └── api/
+    │       ├── whatsapp/webhook/         entrada de mensajes de Meta
+    │       ├── cron/expire-payments/     barrido cada 15 min
+    │       ├── dashboard/pulse/          huella para el sondeo del dashboard
+    │       └── v1/                       API REST
+    ├── lib/
+    │   ├── agent/
+    │   │   ├── run.ts        loop de tool-calling con Gemini
+    │   │   ├── tools.ts      las 5 herramientas
+    │   │   ├── prompt.ts     system prompt por defecto
+    │   │   ├── memory.ts     memoria conversacional desde la tabla Message
+    │   │   ├── config.ts     BotConfig: prompt y modelo editables
+    │   │   ├── trace.ts      persistencia de AgentRun
+    │   │   └── types.ts
+    │   ├── channels/whatsapp.ts   Graph API de Meta
+    │   ├── dedup.ts               deduplicación de webhooks
+    │   ├── calendar.ts, mercadopago.ts, prisma.ts, validations.ts
+    │   ├── services/
+    │   ├── prisma/schema.prisma
+    │   ├── scripts/               bancos de prueba del agente
+    │   └── vercel.json            declaración del cron
+    └── docs/
 ```
 
----
-
-## Flujo completo de reserva con pago
+## Flujo de un mensaje
 
 ```
-1. Usuario escribe en WhatsApp
-2. Meta → webhook → n8n (POST /roomly-wa)
-3. n8n extrae mensaje → AI Agent (Gemini)
-4. Agente llama consultar_habitaciones → backend devuelve disponibilidad + precios
-5. Agente pregunta: ¿seña (15%) o pago total?
-6. Agente llama crear_reserva con paymentType=DEPOSIT|FULL
-7. Backend:
-   a. Crea Reservation en estado PENDING_PAYMENT
-   b. Crea preferencia en Mercado Pago
-   c. Guarda Payment en DB
-   d. Encola job EXPIRE_PAYMENT (24h)
-   e. Devuelve { paymentUrl, payAmount, expiresAt, hotelEmail, hotelPhone }
-8. Agente envía link de pago al usuario + pide que avise cuando pague
-9. Usuario paga en mercadopago.com.ar
-10. Usuario avisa al bot "listo, pagué"
-11. Agente llama consultar_reserva → verifica status
-    - CONFIRMED → confirma al usuario
-    - PENDING_PAYMENT → pide que espere
+1.  Meta hace POST a /api/whatsapp/webhook
+2.  Se extrae el mensaje. Si no es texto (statuses, audio, imagen) → 200 y listo
+3.  Se responde 200 en ~50 ms. Meta corta a los ~20 s
+4.  after() toma el trabajo, ya con la respuesta enviada:
+    a. Se reclama el message.id contra ProcessedEvent. Si Meta reintentó,
+       se descarta acá
+    b. Se cargan BotConfig y los últimos 10 intercambios de la tabla Message
+    c. Corre el agente: Gemini decide qué herramientas llamar y se ejecutan
+       en proceso, sin HTTP
+    d. Se guarda un AgentRun con la traza completa
+    e. Se envía la respuesta por la Graph API
+    f. Se persiste el turno en Message, DESPUÉS de responder: es lo que lee
+       la memoria en el mensaje siguiente
 ```
 
-### Confirmación automática (producción)
-En producción con dominio real, MP envía webhook a `/api/v1/payments/webhook`
-y la reserva pasa a CONFIRMED automáticamente sin que el usuario tenga que avisar.
-Ver `docs/mercadopago.md` para detalle.
+Si algo falla en cualquier punto de `after()`, el huésped recibe el mensaje de
+disculpa y el `AgentRun` queda con `status: FAILED` y el error.
 
----
+## Flujo de reserva con pago
 
-## Variables de entorno
-
-### backend/.env
 ```
-DATABASE_URL           # PostgreSQL connection string
-REDIS_URL              # Redis connection string
-AUTH_SECRET            # NextAuth secret
-NEXTAUTH_URL           # URL pública del backend (localhost en dev)
-ADMIN_EMAIL            # Email del admin del dashboard
-ADMIN_PASSWORD_HASH    # Hash bcrypt de la contraseña
-N8N_WEBHOOK_SECRET     # Secreto compartido entre backend y n8n
-N8N_BASE_URL           # URL de n8n (http://localhost:5678 en dev)
-MP_ACCESS_TOKEN        # Token de Mercado Pago (sandbox o producción)
-WHATSAPP_PHONE_NUMBER_ID  # ID del número de WhatsApp Business
-WHATSAPP_ACCESS_TOKEN     # Token de la API de WhatsApp (System User permanente)
-GOOGLE_SERVICE_ACCOUNT_EMAIL    # Para Google Calendar (opcional)
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
-GOOGLE_CALENDAR_ID
+1.  consultar_habitaciones → disponibilidad con precios
+2.  El agente pregunta: ¿seña del 15% o pago total?
+3.  crear_reserva:
+    a. Reservation en PENDING_PAYMENT
+    b. Preferencia en Mercado Pago
+    c. Payment con expiresAt a 24 h
+    d. Devuelve paymentUrl, payAmount, expiresAt, contacto del hotel
+4.  El agente manda el link
+5.  El huésped paga
+6.  MP hace POST a /api/v1/payments/webhook
+    a. Se deduplica contra ProcessedEvent
+    b. after(): se consulta el pago contra la API de MP (no se confía en el
+       cuerpo de la notificación), la reserva pasa a CONFIRMED, se agenda la
+       limpieza y se avisa al huésped
+7.  Si a las 24 h no se pagó, el cron cancela la reserva
 ```
 
-### .env (raíz, para Docker Compose)
+`crear_reserva` es idempotente: si se la llama dos veces con los mismos datos,
+devuelve la reserva que ya existe con su link original. El modelo a veces se
+adelanta y la llama antes de que el huésped elija forma de pago, y volvía a
+llamarla al recibir la respuesta; sin idempotencia la segunda chocaba contra la
+primera y dejaba una reserva bloqueando la habitación.
+
+## Trabajo diferido
+
+No hay cola de jobs. Lo corto corre inline; lo diferido lo barre el cron.
+
+| Tarea | Cuándo |
+|---|---|
+| Agendar limpieza | Inline, al confirmarse la reserva o el pago |
+| Avisar pago acreditado | Inline, en el webhook de MP |
+| Expirar reservas impagas | Cron, cada 15 min |
+| Cancelar reservas huérfanas | Cron, cada 15 min |
+| Purgar `ProcessedEvent` viejos | Cron, cada 15 min |
+
+Una reserva **huérfana** es una que quedó en `PENDING_PAYMENT` sin fila de
+`Payment`, porque la preferencia de Mercado Pago falló después de haberse
+creado la reserva. Sin el barrido, bloquearía la habitación para siempre. El
+cron respeta un margen de 30 minutos para no tocar una que se esté creando
+justo en ese momento.
+
+## Observabilidad
+
+Cada mensaje entrante deja un `AgentRun` con el texto de entrada y de salida,
+el estado, cada herramienta llamada con sus argumentos y su resultado, tokens,
+iteraciones y duración. Es el reemplazo del historial de ejecuciones de n8n, y
+al ser una tabla se puede consultar con SQL:
+
+```sql
+-- Herramientas que más fallan
+SELECT step->>'name' AS herramienta, count(*)
+FROM "AgentRun", jsonb_array_elements(steps) AS step
+WHERE step->>'kind' = 'tool' AND (step->>'ok')::boolean = false
+GROUP BY 1 ORDER BY 2 DESC;
+
+-- Conversaciones que terminaron mal
+SELECT phone, "inboundText", error, "createdAt"
+FROM "AgentRun" WHERE status <> 'OK' ORDER BY "createdAt" DESC LIMIT 20;
 ```
-N8N_HOST              # Dominio ngrok para n8n
-WEBHOOK_URL           # URL completa de ngrok
-POSTGRES_USER/PASSWORD/DB
-BACKEND_URL           # http://host.docker.internal:3000
-HOTEL_ID              # ID del hotel en la DB
-N8N_WEBHOOK_SECRET    # Mismo valor que en backend/.env
-```
-
----
-
-## Jobs de BullMQ
-
-| Job | Cuándo se encola | Qué hace |
-|-----|-----------------|----------|
-| `EXPIRE_PAYMENT` | Al crear preferencia MP | Cancela reserva y pago si siguen PENDING tras 24h |
-| `SEND_PAYMENT_CONFIRMED` | Al confirmar pago vía webhook | (Reservado para futuro uso / producción) |
-| `SCHEDULE_HOUSEKEEPING` | Al confirmar pago | Crea tarea de housekeeping para el día de checkout |
-| `SEND_CONFIRMATION` | Al crear reserva sin pago | (TODO: envío de confirmación directa) |
-
-El worker arranca automáticamente via `instrumentation.ts` cuando Next.js inicia.
-
----
 
 ## Dashboard
 
-Acceso: `http://localhost:3000/dashboard`  
-Login: `admin@hotel.com` / `admin123` (cambiar en producción)
+Se mantiene al día sondeando `/api/dashboard/pulse` cada 10 segundos, que
+devuelve una huella barata del estado. El cliente sólo pide un refresh cuando
+la huella cambia, y no consulta con la pestaña en segundo plano.
 
-Secciones:
-- **Reservas** – tablero kanban, botón de checkout, badge de vencidas
-- **Housekeeping** – tareas generadas automáticamente al confirmar pagos
-- **Configuración** – datos del hotel, tipos de habitación, habitaciones, tarifas
+Antes esto era SSE sobre Redis pub/sub. En Vercel ese stream se corta al llegar
+al `maxDuration` de la función y el dashboard se queda mudo sin avisar.
 
----
+## Límites conocidos
 
-## Workflow de n8n
+- **Cuota de Gemini.** El tier gratuito son 15 requests por minuto y una
+  reserva completa consume entre 6 y 8: el techo real es de unas dos
+  conversaciones por minuto. Producción necesita tier pago.
+- **Tokens de Meta.** Los temporales duran 24 horas. Hace falta un token de
+  System User.
+- **Ventana de 24 horas de WhatsApp.** Los mensajes que inicia el bot (el aviso
+  de pago acreditado) sólo llegan si el huésped escribió en las últimas 24
+  horas. Fuera de esa ventana hace falta una plantilla aprobada por Meta.
+- **Autenticación de un solo admin**, en variables de entorno. Sin rotación ni
+  recuperación de contraseña.
+- **El webhook de Mercado Pago no valida firma.** El daño está acotado porque
+  el pago se verifica contra la API de MP antes de confirmar nada, pero
+  conviene validar el header `x-signature`.
 
-Archivo: `workflow.json` en la raíz del proyecto.
+## Checklist de producción
 
-Para reimportar: n8n → Workflows → ··· → Import → pegar contenido del archivo.
-
-**Importante**: el workflow debe estar **activo** (toggle en la esquina superior derecha) para recibir mensajes de WhatsApp.
-
-### Credenciales que usa n8n
-- **WhatsApp account** – token System User permanente de Meta Business Suite
-- **Google Gemini(PaLM) Api account** – API Key de Google AI Studio
-
-### Herramientas del agente
-| Tool | Endpoint | Descripción |
-|------|----------|-------------|
-| `consultar_habitaciones` | GET /api/v1/rooms | Disponibilidad y precios |
-| `crear_reserva` | GET /api/v1/reservations/crear | Crea reserva + link de pago MP |
-| `consultar_reserva` | GET /api/v1/reservations | Busca por código RML |
-| `modificar_reserva` | GET /api/v1/reservations/modificar | Cambia fechas/personas |
-| `cancelar_reserva` | GET /api/v1/reservations/cancelar | Cancela reserva |
-
----
-
-## Pasar a producción – checklist
-
-- [ ] Cambiar `MP_ACCESS_TOKEN` por token productivo
-- [ ] Cambiar `NEXTAUTH_URL` al dominio real del backend
-- [ ] Cambiar `WHATSAPP_ACCESS_TOKEN` si el token de desarrollo expira
-- [ ] Cambiar `ADMIN_PASSWORD_HASH` por contraseña segura
-- [ ] Cambiar `AUTH_SECRET` por valor random (openssl rand -base64 32)
-- [ ] Cambiar `N8N_WEBHOOK_SECRET` por valor random
-- [ ] Pasar la app de Meta a modo Live
-- [ ] Crear template de WhatsApp aprobado para notificaciones proactivas (ver banner en /dashboard/configuracion)
+- [ ] `MP_ACCESS_TOKEN` productivo
+- [ ] `NEXTAUTH_URL` con el dominio real (Mercado Pago lo usa para su webhook)
+- [ ] `WHATSAPP_ACCESS_TOKEN` de System User, no temporal
+- [ ] `WHATSAPP_VERIFY_TOKEN` definido y cargado también en el panel de Meta
+- [ ] `AUTH_SECRET` nuevo (`openssl rand -base64 32`)
+- [ ] `ADMIN_PASSWORD_HASH` con una contraseña real
+- [ ] `CRON_SECRET` definido
+- [ ] `GEMINI_API_KEY` con tier pago
+- [ ] Webhook de Meta apuntando a `https://TU-DOMINIO/api/whatsapp/webhook`
+- [ ] App de Meta en modo Live
+- [ ] Plantilla de WhatsApp aprobada para avisos fuera de la ventana de 24 h

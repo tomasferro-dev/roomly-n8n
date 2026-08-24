@@ -1,244 +1,144 @@
 # Roomly – Asistente de reservas por WhatsApp
 
-Bot de WhatsApp que gestiona reservas de hotel usando n8n + Google Gemini + un backend propio en Next.js.
+Bot de WhatsApp que gestiona reservas de hotel: consulta disponibilidad, arma la
+reserva, cobra por Mercado Pago y confirma. Todo corre dentro de una única
+aplicación Next.js.
 
 ## Stack
 
 | Componente | Tecnología | Rol |
 |------------|-----------|-----|
-| **Backend** | Next.js 14 + Prisma | API REST, lógica de negocio, **fuente de verdad** |
-| **Base de datos** | PostgreSQL | Persistencia de reservas, huéspedes, habitaciones |
-| **Cache / Colas** | Redis + BullMQ | Jobs async (confirmaciones, housekeeping) |
-| **Automatización** | n8n (Docker) | Orquestación del flujo WhatsApp → IA → respuesta |
-| **IA** | Google Gemini Flash Lite | Procesamiento del lenguaje, decisión de acciones |
-| **Canal** | WhatsApp Business API | Comunicación con el huésped |
-| **Calendario** | Google Calendar | Espejo visual de reservas (no es la fuente de verdad) |
-| **Túnel** | ngrok | Exposición pública del webhook en desarrollo |
+| **Aplicación** | Next.js 16 + Prisma | API, dashboard, agente y canal de WhatsApp |
+| **Base de datos** | PostgreSQL (Neon) | Fuente de verdad |
+| **IA** | Google Gemini Flash Lite | Entiende al huésped y decide qué herramienta usar |
+| **Canal** | WhatsApp Cloud API | Comunicación con el huésped |
+| **Pagos** | Mercado Pago | Seña del 15% o pago total |
+| **Calendario** | Google Calendar | Espejo visual de reservas (no es fuente de verdad) |
+| **Hosting** | Vercel | Deploy en cada push |
+
+No hay Docker, ni ngrok, ni n8n, ni Redis. El stack anterior está archivado en
+[`docs/legacy/`](docs/legacy/README.md).
 
 ## Arquitectura
 
 ```
 WhatsApp
-   │  (POST)
+   │  POST
    ▼
-n8n webhook ──► Gemini AI Agent
-                    │
-                    ├── consultar_habitaciones ──► Backend API
-                    ├── crear_reserva          ──► Backend API ──► PostgreSQL
-                    ├── consultar_reserva      ──► Backend API        │
-                    ├── modificar_reserva      ──► Backend API        └──► Google Calendar
-                    └── cancelar_reserva       ──► Backend API             (espejo)
+/api/whatsapp/webhook ──► responde 200 en ~50 ms
+   │                       (Meta corta a los ~20 s)
+   └─ after() ──► agente Gemini
+                    ├── consultar_habitaciones ──┐
+                    ├── crear_reserva            │
+                    ├── consultar_reserva        ├──► services ──► PostgreSQL
+                    ├── modificar_reserva        │                     │
+                    └── cancelar_reserva ────────┘                     ▼
+                                                             Google Calendar
+                                                                 (espejo)
 ```
 
-El backend es la fuente de verdad. Google Calendar se actualiza automáticamente como vista secundaria pero no se consulta para nada operativo.
+Las herramientas del agente son llamadas a función directas contra los services,
+no HTTP.
+
+Aparte del webhook hay un cron cada 15 minutos
+(`/api/cron/expire-payments`) que cancela las reservas que quedaron sin pagar
+pasadas las 24 horas.
 
 ## Funcionalidades
 
-- **Nueva reserva** – el agente consulta disponibilidad, elige habitación y confirma con código `RML-XXXX`
-- **Consulta** – por código RML devuelve todos los detalles
-- **Modificación** – cambia fechas o cantidad de personas
-- **Cancelación** – requiere confirmación explícita del huésped
-- **Memoria conversacional** – cada usuario tiene su propio contexto (últimos 10 mensajes)
-- **Google Calendar** – cada reserva crea un evento; se actualiza/elimina al modificar/cancelar
+- **Nueva reserva** – consulta disponibilidad con precios, arma la reserva y
+  manda el link de pago. La reserva queda en `PENDING_PAYMENT` hasta que
+  Mercado Pago acredite.
+- **Consulta, modificación y cancelación** – por código `RML-XXXX`. Cancelar
+  exige confirmación explícita del huésped.
+- **Memoria conversacional** – los últimos 10 intercambios por teléfono, desde
+  la base, así sobreviven a cualquier reinicio.
+- **Traza de ejecución** – cada mensaje deja un `AgentRun` con las herramientas
+  llamadas, sus argumentos y resultados, tokens y duración.
+- **Prompt editable** – el system prompt vive en `BotConfig` y se puede cambiar
+  sin redeploy.
+- **Dashboard** – reservas, habitaciones, tipos y tarifas.
 
-## Setup
+## Desarrollo local
 
 ### Requisitos
 
-- Docker Desktop
-- Node.js 18+
-- Cuenta de WhatsApp Business API (Meta Developer)
-- API Key de Google Gemini (Google AI Studio)
-- Service account de Google con acceso a Google Calendar
-- ngrok
+- Node.js 20+
+- Una base PostgreSQL (Neon sirve; también un Postgres local)
+- API key de Google Gemini ([AI Studio](https://aistudio.google.com/apikey))
+- Cuenta de WhatsApp Business API (Meta Developers)
+- Credenciales de Mercado Pago
 
-### 1. Clonar y configurar variables de entorno
+### Puesta en marcha
 
 ```bash
 git clone https://github.com/cubo1991/roomly-n8n.git
-cd roomly-n8n
-```
-
-**Variables de n8n / Docker** (`/.env`):
-```env
-N8N_HOST=<tu-subdominio>.ngrok-free.app
-WEBHOOK_URL=https://<tu-subdominio>.ngrok-free.app
-WHATSAPP_RECIPIENT=<número-con-código-de-país>
-POSTGRES_USER=roomly
-POSTGRES_PASSWORD=roomly_password
-POSTGRES_DB=roomly
-BACKEND_URL=http://host.docker.internal:3000
-HOTEL_ID=<id-del-hotel-en-la-db>
-N8N_WEBHOOK_SECRET=<secret-compartido-con-el-backend>
-GOOGLE_SERVICE_ACCOUNT_EMAIL=<email-de-la-service-account>
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
-GOOGLE_CALENDAR_ID=<email-o-id-del-calendario>
-```
-
-**Variables del backend** (`/backend/.env`):
-```env
-DATABASE_URL="postgresql://roomly:roomly_password@localhost:5433/roomly"
-REDIS_URL="redis://localhost:6379"
-AUTH_SECRET="<secreto-aleatorio>"
-NEXTAUTH_URL="http://localhost:3000"
-ADMIN_EMAIL="admin@hotel.com"
-ADMIN_PASSWORD_HASH="<hash-bcrypt>"
-N8N_WEBHOOK_SECRET=<mismo-secret-que-en-raiz>
-GOOGLE_SERVICE_ACCOUNT_EMAIL=<igual-que-arriba>
-GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
-GOOGLE_CALENDAR_ID=<igual-que-arriba>
-```
-
-### 2. Levantar Docker (n8n + PostgreSQL + Redis)
-
-```bash
-docker compose -f docker-compose.yml --env-file .env up -d
-```
-
-O usar el acceso directo: **`Iniciar Roomly.bat`** (en el Escritorio).
-
-### 3. Levantar el backend
-
-```bash
-cd backend
+cd roomly-n8n/backend
 npm install
+cp .env.example .env    # completá los valores
 npx prisma migrate deploy
-npx tsx prisma/seed.ts   # crea hotel, habitaciones y rate plans
-npm run dev              # http://localhost:3000
+npm run db:seed         # hotel, habitaciones y tarifas de ejemplo
+npm run dev             # http://localhost:3000
 ```
 
-> Después del seed, copiá el `HOTEL_ID` que imprime y actualizalo en `/.env`. Luego recreá el contenedor n8n:
-> ```bash
-> docker compose --env-file .env up -d --force-recreate n8n
-> ```
+### Variables de entorno
 
-### 4. Configurar ngrok
+Van todas en `backend/.env`. En producción, en el panel de Vercel.
+
+| Variable | Para qué |
+|---|---|
+| `DATABASE_URL` | PostgreSQL. En Neon, usá la connection string **con pooling** |
+| `AUTH_SECRET` | Firma de sesión de NextAuth |
+| `NEXTAUTH_URL` | URL pública. Mercado Pago la usa para su webhook |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD_HASH` | Acceso al dashboard (hash bcrypt) |
+| `GEMINI_API_KEY` | Google AI Studio. 39 caracteres, empieza con `AIza` |
+| `WHATSAPP_ACCESS_TOKEN` | Token de **System User** de Meta (los temporales duran 24 h) |
+| `WHATSAPP_PHONE_NUMBER_ID` | Número del hotel, para los avisos que inicia el bot |
+| `WHATSAPP_VERIFY_TOKEN` | Cadena que elegís vos; la misma va en el panel de Meta |
+| `WHATSAPP_API_VERSION` | Opcional, por defecto `v22.0` |
+| `MP_ACCESS_TOKEN` | Mercado Pago |
+| `CRON_SECRET` | Protege el endpoint del cron |
+| `HOTEL_ID` | Opcional. Si falta, se usa el único hotel de la base |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Calendar |
+| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | Ojo con los `\n` al pegarla |
+| `GOOGLE_CALENDAR_ID` | Google Calendar |
+
+## Probar el bot sin WhatsApp
 
 ```bash
-ngrok http 5678
+npm run agent:chat                          # conversación interactiva
+npm run agent:chat -- --guion todos --pasos # los guiones, mostrando herramientas
 ```
 
-Copiá la URL generada en las variables `N8N_HOST` y `WEBHOOK_URL` del `/.env` y recreá n8n.
+La conversación vive en memoria y no toca la tabla `Message`. Las reservas que
+se creen **sí son reales**: corré esto contra desarrollo.
 
-### 5. Importar y configurar el workflow en n8n
-
-1. Abrí `http://localhost:5678`
-2. **Workflows → Import from file** → seleccioná `workflow.json`
-3. Asigná credenciales en los nodos que las requieren:
-   - **WhatsApp account** – token de acceso permanente de Meta
-   - **Google Gemini(PaLM) Api account** – API Key de Google AI Studio
-4. En el nodo **Gemini Flash**, verificá que el modelo sea `models/gemini-3.1-flash-lite`
-5. Activá el workflow (toggle **Published**)
-
-### 6. Verificar webhook en Meta
-
-En Meta Developer Console → WhatsApp → Configuration:
-- **Callback URL:** `https://<ngrok-url>/webhook/roomly-wa`
-- **Verify Token:** `roomly2026`
-
-Verificar y guardar. Luego en **Webhook fields** → **messages** → **Subscribe**.
-
-### 7. Verificar integración con Google Calendar (opcional)
+## Verificación
 
 ```bash
-cd backend
-npx tsx scripts/test-calendar.ts
+npm run agent:check          # lógica pura: zona horaria, prompt, parseo de Meta
+npm run agent:tools          # las 5 herramientas contra la base (solo lectura)
+npm run agent:tools -- --write   # agrega crear → modificar → cancelar
+npx tsc --noEmit
+npm run build
 ```
 
-## Estructura del proyecto
+## Deploy
 
-```
-roomly-n8n/
-├── backend/                        # API REST (Next.js 14 + Prisma)
-│   ├── app/api/v1/                 # Endpoints REST
-│   │   ├── rooms/                  # Consulta de disponibilidad
-│   │   └── reservations/           # CRUD de reservas
-│   ├── lib/
-│   │   ├── calendar.ts             # Integración Google Calendar
-│   │   ├── prisma.ts               # Cliente Prisma
-│   │   └── queue.ts                # BullMQ
-│   ├── services/
-│   │   └── reservation.service.ts  # Lógica de negocio
-│   ├── prisma/
-│   │   ├── schema.prisma           # Modelo de datos
-│   │   └── seed.ts                 # Datos iniciales
-│   └── scripts/
-│       └── test-calendar.ts        # Script de diagnóstico Calendar
-├── workflow.json                   # Workflow n8n v14
-├── docker-compose.yml              # Stack Docker
-├── .env                            # Variables n8n + Docker (NO subir a git)
-├── WORKFLOW_NODOS.md               # Documentación de cada nodo del workflow
-├── PROBLEMAS_Y_SOLUCIONES.md       # Registro de bugs y soluciones
-└── Iniciar Roomly.bat              # Script de inicio rápido (Windows)
-```
+Vercel, con `backend/` como root directory del proyecto. Cada push despliega.
 
-## API Reference
+El cron está declarado en [`backend/vercel.json`](backend/vercel.json).
 
-Todos los endpoints requieren el parámetro `_s=<N8N_WEBHOOK_SECRET>` **o** una sesión de NextAuth activa.
+Después del primer deploy hay que apuntar dos webhooks al dominio de Vercel:
 
-### Endpoints del bot (consumidos por n8n)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/v1/rooms` | Habitaciones disponibles (`hotelId`, `checkIn`, `checkOut`) |
-| `GET` | `/api/v1/reservations/crear` | Crear reserva |
-| `GET` | `/api/v1/reservations` | Consultar reserva por código (`code=RML-XXXX`) |
-| `GET` | `/api/v1/reservations/modificar` | Modificar reserva (`id`, campos a cambiar) |
-| `GET` | `/api/v1/reservations/cancelar` | Cancelar reserva (`id`) |
-
-> **¿Por qué todo es GET?**  
-> Consumidos por `toolHttpRequest` de n8n, que construye la URL con placeholders (`{param}`) en la query string. GET es la opción más simple: los parámetros opcionales se omiten sin romper nada y no hay que armar un body JSON con templates. Semánticamente debería ser `PATCH`/`DELETE`, pero dado que es una API interna el pragmatismo gana.
-
-### Endpoints de administración (gestión del hotel)
-
-Usan métodos REST convencionales. Requieren sesión de NextAuth o `_s=<secret>`.
-
-#### Hotel
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/v1/hotels` | Listar todos los hoteles |
-| `POST` | `/api/v1/hotels` | Crear hotel (`name`, `slug`, `address?`, `phone?`, `email?`) |
-| `GET` | `/api/v1/hotels/:id` | Detalle del hotel con tipos de habitación |
-| `PATCH` | `/api/v1/hotels/:id` | Actualizar info del hotel |
-
-#### Tipos de habitación
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/v1/room-types?hotelId=` | Listar tipos de habitación |
-| `POST` | `/api/v1/room-types` | Crear tipo (`hotelId`, `name`, `maxGuests?`, `amenities?`) |
-| `GET` | `/api/v1/room-types/:id` | Detalle con habitaciones y tarifas |
-| `PATCH` | `/api/v1/room-types/:id` | Actualizar nombre, descripción, amenities |
-| `DELETE` | `/api/v1/room-types/:id` | Eliminar (bloqueado si tiene habitaciones) |
-
-#### Habitaciones
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/v1/rooms` | Listar habitaciones (con `checkIn`/`checkOut` filtra disponibles) |
-| `POST` | `/api/v1/rooms` | Crear habitación (`hotelId`, `typeId`, `number`, `floor?`) |
-| `GET` | `/api/v1/rooms/:id` | Detalle de habitación |
-| `PATCH` | `/api/v1/rooms/:id` | Actualizar número, piso, tipo, estado, notas |
-| `DELETE` | `/api/v1/rooms/:id` | Eliminar (bloqueado si tiene reservas activas) |
-
-#### Planes de tarifa
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| `GET` | `/api/v1/rate-plans?hotelId=` | Listar tarifas (filtra por `typeId?`) |
-| `POST` | `/api/v1/rate-plans` | Crear tarifa (`hotelId`, `typeId`, `name`, `pricePerNight`, `validFrom`, `validTo`) |
-| `GET` | `/api/v1/rate-plans/:id` | Detalle de tarifa |
-| `PATCH` | `/api/v1/rate-plans/:id` | Actualizar precio, fechas de vigencia |
-| `DELETE` | `/api/v1/rate-plans/:id` | Eliminar (bloqueado si tiene reservas activas) |
-
-## Notas importantes
-
-- El modelo Gemini correcto es `models/gemini-3.1-flash-lite`. Los modelos `gemini-2.5-flash` (429) y `gemini-1.5-flash` (404) no funcionan en free tier.
-- El `--env-file` es obligatorio en el comando `docker compose` o el contenedor arranca sin variables.
-- Google Calendar es un espejo: si se cae o falla, las reservas siguen funcionando normalmente.
+- **Meta Developers** → `https://TU-DOMINIO/api/whatsapp/webhook`, con el
+  `WHATSAPP_VERIFY_TOKEN` que hayas elegido.
+- **Mercado Pago** → se configura solo, a partir de `NEXTAUTH_URL`.
 
 ## Documentación
 
-| Archivo | Contenido |
-|---------|-----------|
-| [`docs/PROBLEMAS_Y_SOLUCIONES.md`](docs/PROBLEMAS_Y_SOLUCIONES.md) | Registro de bugs encontrados y cómo se resolvieron |
-| [`docs/WORKFLOW_NODOS.md`](docs/WORKFLOW_NODOS.md) | Descripción de cada nodo del workflow de n8n |
-| [`docs/BACKEND.md`](docs/BACKEND.md) | Arquitectura y estructura del backend Next.js |
-| [`docs/SSE_TIEMPO_REAL.md`](docs/SSE_TIEMPO_REAL.md) | Cómo funciona el tiempo real en el dashboard (SSE + Redis) |
+- [`docs/arquitectura.md`](docs/arquitectura.md) – cómo encaja todo
+- [`docs/BACKEND.md`](docs/BACKEND.md) – modelo de datos y endpoints
+- [`docs/mercadopago.md`](docs/mercadopago.md) – flujo de pago
+- [`docs/PROBLEMAS_Y_SOLUCIONES.md`](docs/PROBLEMAS_Y_SOLUCIONES.md) – bitácora
+- [`docs/legacy/`](docs/legacy/README.md) – el stack anterior con n8n

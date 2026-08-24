@@ -125,7 +125,10 @@ export async function createReservation(input: CreateReservationInput) {
         reservationId: res.id,
         action: "CREATED",
         after: res as object,
-        performedBy: channel === "WHATSAPP" ? "n8n" : "admin",
+        // Ya no es n8n quien crea las reservas por WhatsApp, sino el agente
+        // propio. Las filas anteriores conservan "n8n", que sigue siendo cierto
+        // para el momento en que se crearon.
+        performedBy: channel === "WHATSAPP" ? "bot" : "admin",
       },
     });
 

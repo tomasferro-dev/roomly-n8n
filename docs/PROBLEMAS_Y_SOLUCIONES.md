@@ -2,6 +2,12 @@
 
 Registro de bugs encontrados durante el desarrollo y cómo se resolvieron.
 
+> **Nota histórica.** Las entradas anteriores a la migración a Vercel describen
+> el stack con n8n, Docker, ngrok y Redis, que ya no está en uso. Los comandos
+> y rutas que mencionan (`docker compose`, `workflow.json`, URLs de ngrok,
+> `/webhook/roomly-wa`) corresponden a ese sistema; quedan como registro de por
+> qué se tomaron ciertas decisiones. Ver `legacy/README.md`.
+
 ## Notas de configuración
 
 | Componente | Valor correcto | Notas |

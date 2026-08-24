@@ -29,7 +29,7 @@ backend/
 ├── app/
 │   ├── api/
 │   │   ├── auth/[...nextauth]/route.ts   # Handlers NextAuth
-│   │   ├── dashboard/events/route.ts     # SSE (tiempo real) — ver SSE_TIEMPO_REAL.md
+│   │   ├── dashboard/pulse/route.ts      # huella para el sondeo del dashboard
 │   │   └── v1/
 │   │       ├── reservations/
 │   │       │   ├── route.ts              # GET list / POST create
@@ -309,8 +309,8 @@ conversación**: cada reserva confirma con su `RML-XXXX`, así que su chat va de
 encuentra el mensaje de confirmación (reserva sin chat / creada desde el dashboard),
 cae a una ventana temporal. Ver `PROBLEMAS_Y_SOLUCIONES.md` [010].
 
-> El chat **no** se actualiza en vivo (no usa SSE); el drawer lo consulta al abrirse.
-> Ver `SSE_TIEMPO_REAL.md`.
+> El chat **no** se actualiza en vivo; el drawer lo consulta al abrirse. El
+> resto del dashboard se mantiene al día sondeando `/api/dashboard/pulse`.
 
 ---
 
@@ -367,38 +367,25 @@ EXCLUDE USING GIST (
 
 ---
 
-## Deploy con Docker
+## Deploy
 
-### 1. Descomentar el servicio `nextjs` en `docker-compose.yml`
+Vercel, con `backend/` como root directory. Cada push despliega. Las
+migraciones se aplican en el comando de build, no al arrancar el proceso.
 
-### 2. Completar variables de entorno en `.env`
-
-### 3. Levantar todo
-```bash
-docker compose up -d
-```
-
-El contenedor de Next.js ejecuta `entrypoint.sh` que:
-1. Corre `prisma migrate deploy` (aplica migraciones pendientes)
-2. Inicia el servidor Next.js en modo producción
+El deploy en contenedor quedó archivado en `legacy/` (`Dockerfile.backend` y
+`entrypoint.sh`) por si alguna vez hiciera falta volver.
 
 ---
 
-## Integración n8n ↔ Backend
+## El agente
 
-Una vez que el flujo de WhatsApp completa la recopilación de datos, n8n puede llamar al backend:
+El bot vive dentro de este mismo backend, en `lib/agent/`. Las cinco
+herramientas llaman a los services **en proceso**: no hay HTTP ni secreto
+compartido de por medio.
 
-### Opción A: HTTP Request node en n8n
-```
-POST https://tu-backend.com/api/v1/reservations
-Headers:
-  X-N8N-Secret: <N8N_WEBHOOK_SECRET>
-  Content-Type: application/json
-Body: { hotelId, roomId, guest, checkIn, checkOut, numGuests, channel: "WHATSAPP", code: "{{ $json.codigoRML }}" }
-```
-
-### Opción B: Mantener Google Calendar y sincronizar luego
-El workflow actual de n8n puede seguir usando Google Calendar. Un proceso de sincronización periódica puede importar los eventos al backend.
+Antes esto era un workflow de n8n que llamaba a `/api/v1/*` con
+`?_s=N8N_WEBHOOK_SECRET`. Ese secreto ya no existe. Ver `arquitectura.md`, y
+`legacy/README.md` para la equivalencia pieza por pieza.
 
 ---
 
