@@ -125,7 +125,12 @@ npm run build
 
 ## Deploy
 
-Vercel, con `backend/` como root directory del proyecto. Cada push despliega.
+Vercel, con `backend/` como **root directory** del proyecto. Cada push despliega.
+
+El build lo maneja el script `vercel-build` de `package.json`, que Vercel usa
+automáticamente. Las migraciones corren **sólo en producción**: si un deploy de
+preview trae una migración nueva, aplicarla tocaría la base de producción antes
+de que ese cambio esté aprobado.
 
 El cron está declarado en [`backend/vercel.json`](backend/vercel.json).
 
