@@ -113,6 +113,22 @@ creado la reserva. Sin el barrido, bloquearía la habitación para siempre. El
 cron respeta un margen de 30 minutos para no tocar una que se esté creando
 justo en ese momento.
 
+## Base de datos
+
+Neon, región `sa-east-1` (São Paulo). La `DATABASE_URL` tiene que ser la
+connection string **con pooling** — la que lleva `-pooler` en el host. La
+directa abre una conexión por invocación y en serverless se agotan.
+
+> **Neon deja el `search_path` vacío** en los proyectos nuevos. Prisma no se ve
+> afectado porque califica el esquema por su cuenta, pero cualquier consulta
+> suelta contra esta base tiene que escribir `public."Tabla"`, con las comillas.
+> Sin calificar, da `relation "Hotel" does not exist` aunque la tabla exista.
+
+Las consultas dejaron de ser instantáneas: contra el Postgres local una lectura
+tardaba entre 4 y 30 ms, contra Neon entre 300 y 650 ms. No es un problema para
+el bot, porque ya responde el 200 antes de procesar, pero sí conviene tenerlo en
+cuenta al agregar consultas en serie dentro de una misma petición.
+
 ## Observabilidad
 
 Cada mensaje entrante deja un `AgentRun` con el texto de entrada y de salida,
