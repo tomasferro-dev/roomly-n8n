@@ -20,7 +20,7 @@ el otro sin que nadie haya tocado código, el problema está en alguno de estos.
 
 ### Vercel — variables de entorno
 
-Las 14 que lee el código están en Settings → Environment Variables. Dos cosas
+Las 16 que lee el código están en Settings → Environment Variables. Dos cosas
 que se olvidan siempre:
 
 - **Cambiar una variable no afecta al deploy que ya está corriendo.** Hay que
@@ -42,6 +42,19 @@ En `developers.facebook.com` → app **n8n hotel 1** → WhatsApp:
 **La suscripción a `messages` es un paso aparte** de guardar la URL, en el botón
 "Administrar" de esa misma sección. Sin ella el webhook queda verificado, todo
 parece correcto, y no llega ni un mensaje. No da ningún síntoma de error.
+
+### Resend — emails
+
+El email de confirmación con el QR sale cuando se acredita el pago, y sólo si
+el huésped dejó un correo. Es un canal secundario: si Resend no está
+configurado o el envío falla, la reserva se confirma igual y el aviso por
+WhatsApp sale como siempre. Nada del flujo depende del email.
+
+**Resend exige un dominio verificado** para usar una dirección propia en
+`EMAIL_FROM`. Sin verificar, el único remitente disponible es
+`onboarding@resend.dev`, y ése **sólo puede escribirle al dueño de la cuenta de
+Resend**. Es la misma clase de límite que la lista blanca del número de prueba
+de Meta: alcanza para probar, no para huéspedes reales.
 
 ### Mercado Pago
 
@@ -179,5 +192,7 @@ ahora reglas de formato explícitas.
 - **`middleware.ts` quedó deprecado** en Next 16 a favor de `proxy`. El build lo
   avisa en cada corrida. El codemod oficial no lo migra porque el archivo usa
   `export default auth(...)` de next-auth.
+- **El email depende de un dominio verificado en Resend** para llegarle a
+  alguien que no sea el dueño de la cuenta.
 - **Las variables de Vercel están en Production y Preview a la vez.** Un deploy
   de preview usaría la misma base y las mismas credenciales que producción.

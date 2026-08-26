@@ -54,7 +54,7 @@ export const functionDeclarations: FunctionDeclaration[] = [
   {
     name: "crear_reserva",
     description:
-      "Crea una nueva reserva con link de pago de Mercado Pago. Requiere roomId, guestName, checkIn, checkOut, numGuests y paymentType. Devuelve code, paymentUrl, payAmount, expiresAt, hotelEmail y hotelPhone.",
+      "Crea una nueva reserva con link de pago de Mercado Pago. Requiere roomId, guestName, checkIn, checkOut, numGuests y paymentType. guestEmail es opcional. Devuelve code, paymentUrl, payAmount, expiresAt, hotelEmail y hotelPhone.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -63,6 +63,11 @@ export const functionDeclarations: FunctionDeclaration[] = [
           description: "ID de la habitación (campo id de consultar_habitaciones)",
         },
         guestName: { type: Type.STRING, description: "Nombre completo del huésped" },
+        guestEmail: {
+          type: Type.STRING,
+          description:
+            "Email del huésped, para mandarle la confirmación con el QR. OPCIONAL: omitir si no lo quiso dar.",
+        },
         checkIn: { type: Type.STRING, description: "Fecha check-in YYYY-MM-DD" },
         checkOut: { type: Type.STRING, description: "Fecha check-out YYYY-MM-DD" },
         numGuests: { type: Type.NUMBER, description: "Cantidad de personas (número entero)" },
@@ -244,6 +249,15 @@ const handlers: Record<string, ToolHandler> = {
 
     const roomId = await resolveRoomId(roomIdRaw, ctx.hotelId);
 
+    // El email es opcional y secundario. Si el modelo manda algo que no parece
+    // un email, se descarta en silencio en vez de hacer fallar la reserva: el
+    // huésped puede corregirlo después y el canal principal sigue siendo
+    // WhatsApp.
+    const emailRaw = str(args.guestEmail);
+    const guestEmail = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailRaw)
+      ? emailRaw.toLowerCase()
+      : undefined;
+
     // Idempotencia. El modelo a veces llama a esta herramienta dos veces con
     // los mismos datos: se adelanta y crea la reserva antes de que el huésped
     // elija seña o total, y cuando el huésped responde vuelve a llamarla. La
@@ -259,6 +273,7 @@ const handlers: Record<string, ToolHandler> = {
       hotelId: ctx.hotelId,
       roomId,
       guestName,
+      guestEmail,
       // Forzado desde el webhook: el modelo no elige a nombre de qué número reserva.
       guestPhone: ctx.phone,
       checkIn,

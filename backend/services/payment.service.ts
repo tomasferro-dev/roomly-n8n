@@ -3,6 +3,7 @@ import { mpClient } from "@/lib/mercadopago";
 import { prisma } from "@/lib/prisma";
 import { scheduleHousekeeping } from "./reservation.service";
 import { enviarTexto } from "@/lib/channels/whatsapp";
+import { enviarConfirmacionReserva } from "@/lib/email";
 
 /**
  * URL pública, sin barra al final.
@@ -236,12 +237,16 @@ export async function notifyPaymentConfirmed(
     const res = await prisma.reservation.findUnique({
       where: { id: reservationId },
       include: {
-        guest: { select: { phone: true } },
+        guest: { select: { phone: true, email: true, name: true } },
         room:  { select: { number: true } },
-        hotel: { select: { name: true } },
+        hotel: { select: { name: true, email: true, phone: true } },
       },
     });
     if (!res) return;
+
+    // El email va primero y por separado: es opcional y no debe verse afectado
+    // si WhatsApp no está configurado o si el envío por WhatsApp falla.
+    await enviarConfirmacionSiHayEmail(res, info);
 
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
     if (!phoneNumberId) {
@@ -337,4 +342,49 @@ export async function expirePendingPayments(): Promise<{
   }
 
   return { vencidas: vencidos.length, huerfanas: huerfanas.length };
+}
+
+/**
+ * Manda la confirmación por email, si el huésped dejó uno.
+ *
+ * El email es un canal secundario y opcional: WhatsApp sigue siendo el
+ * principal. Por eso nunca lanza y no interrumpe nada si falla — una reserva
+ * confirmada no puede quedar a medias porque el correo rebotó.
+ */
+async function enviarConfirmacionSiHayEmail(
+  res: {
+    code: string;
+    checkIn: Date;
+    checkOut: Date;
+    numGuests: number;
+    guestName: string | null;
+    guest: { email: string | null; name: string };
+    room: { number: string };
+    hotel: { name: string; email: string | null; phone: string | null };
+  },
+  info: { paymentType: string; amount: number }
+): Promise<void> {
+  if (!res.guest.email) return;
+
+  const esSenia = info.paymentType === "DEPOSIT";
+  // La seña es el 15%, así que el total se reconstruye desde lo pagado.
+  const totalReserva = esSenia ? Math.round(info.amount / 0.15) : info.amount;
+
+  const id = await enviarConfirmacionReserva({
+    to: res.guest.email,
+    code: res.code,
+    hotelName: res.hotel.name,
+    hotelEmail: res.hotel.email,
+    hotelPhone: res.hotel.phone,
+    guestName: res.guestName ?? res.guest.name,
+    roomNumber: res.room.number,
+    checkIn: res.checkIn,
+    checkOut: res.checkOut,
+    numGuests: res.numGuests,
+    montoPagado: info.amount,
+    esSenia,
+    totalReserva,
+  });
+
+  if (id) console.log(`[email] confirmación de ${res.code} enviada a ${res.guest.email} (${id})`);
 }
