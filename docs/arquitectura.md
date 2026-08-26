@@ -194,16 +194,19 @@ al `maxDuration` de la función y el dashboard se queda mudo sin avisar.
   el pago se verifica contra la API de MP antes de confirmar nada, pero
   conviene validar el header `x-signature`.
 
-## Checklist de producción
+## Estado del despliegue
 
-- [ ] `MP_ACCESS_TOKEN` productivo
-- [ ] `NEXTAUTH_URL` con el dominio real (Mercado Pago lo usa para su webhook)
-- [ ] `WHATSAPP_ACCESS_TOKEN` de System User, no temporal
-- [ ] `WHATSAPP_VERIFY_TOKEN` definido y cargado también en el panel de Meta
-- [ ] `AUTH_SECRET` nuevo (`openssl rand -base64 32`)
-- [ ] `ADMIN_PASSWORD_HASH` con una contraseña real
-- [ ] `CRON_SECRET` definido
-- [ ] `GEMINI_API_KEY` con tier pago
-- [ ] Webhook de Meta apuntando a `https://TU-DOMINIO/api/whatsapp/webhook`
-- [ ] App de Meta en modo Live
-- [ ] Plantilla de WhatsApp aprobada para avisos fuera de la ventana de 24 h
+El sistema está en producción en https://roomly-n8n3.vercel.app y el circuito
+completo quedó verificado de punta a punta: mensaje de WhatsApp → agente →
+reserva → link de pago → pago acreditado → webhook de Mercado Pago → reserva
+confirmada → aviso al huésped.
+
+Lo que queda pendiente no es técnico del sistema, sino de las cuentas:
+
+- Verificación del negocio en Meta y un número propio, para que el bot pueda
+  atender a cualquiera y no sólo a una lista blanca de cinco.
+- Tier pago de Gemini, para superar las dos conversaciones por minuto.
+- Credenciales productivas de Mercado Pago, cuando se quiera cobrar de verdad.
+
+Los detalles operativos, los límites vigentes y el procedimiento de diagnóstico
+están en [`PRODUCCION.md`](PRODUCCION.md).

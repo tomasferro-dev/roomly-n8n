@@ -4,6 +4,10 @@ Bot de WhatsApp que gestiona reservas de hotel: consulta disponibilidad, arma la
 reserva, cobra por Mercado Pago y confirma. Todo corre dentro de una única
 aplicación Next.js.
 
+**En producción:** https://roomly-n8n3.vercel.app — ver
+[`docs/PRODUCCION.md`](docs/PRODUCCION.md) para el estado del despliegue, los
+límites actuales y cómo diagnosticar problemas.
+
 ## Stack
 
 | Componente | Tecnología | Rol |
@@ -40,9 +44,10 @@ WhatsApp
 Las herramientas del agente son llamadas a función directas contra los services,
 no HTTP.
 
-Aparte del webhook hay un cron cada 15 minutos
-(`/api/cron/expire-payments`) que cancela las reservas que quedaron sin pagar
-pasadas las 24 horas.
+Las reservas que quedan sin pagar pasadas las 24 horas se cancelan solas: un
+barrido oportunista que se dispara con el tráfico (máximo uno cada 15 minutos)
+más un cron diario que cubre los días sin actividad. Ver
+[`docs/arquitectura.md`](docs/arquitectura.md).
 
 ## Funcionalidades
 
@@ -72,7 +77,7 @@ pasadas las 24 horas.
 ### Puesta en marcha
 
 ```bash
-git clone https://github.com/cubo1991/roomly-n8n.git
+git clone https://github.com/tomasferro-dev/roomly-n8n.git
 cd roomly-n8n/backend
 npm install
 cp .env.example .env    # completá los valores
@@ -96,7 +101,7 @@ Van todas en `backend/.env`. En producción, en el panel de Vercel.
 | `WHATSAPP_PHONE_NUMBER_ID` | Número del hotel, para los avisos que inicia el bot |
 | `WHATSAPP_VERIFY_TOKEN` | Cadena que elegís vos; la misma va en el panel de Meta |
 | `WHATSAPP_API_VERSION` | Opcional, por defecto `v22.0` |
-| `MP_ACCESS_TOKEN` | Mercado Pago |
+| `MP_ACCESS_TOKEN` | Mercado Pago. Las credenciales de prueba y las productivas ya **no** se distinguen por el prefijo: ambas empiezan con `APP_USR-` |
 | `CRON_SECRET` | Protege el endpoint del cron |
 | `HOTEL_ID` | Opcional. Si falta, se usa el único hotel de la base |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Calendar |
@@ -163,4 +168,5 @@ Después del primer deploy hay que apuntar dos webhooks al dominio de Vercel:
 - [`docs/BACKEND.md`](docs/BACKEND.md) – modelo de datos y endpoints
 - [`docs/mercadopago.md`](docs/mercadopago.md) – flujo de pago
 - [`docs/PROBLEMAS_Y_SOLUCIONES.md`](docs/PROBLEMAS_Y_SOLUCIONES.md) – bitácora
+- [`docs/PRODUCCION.md`](docs/PRODUCCION.md) – estado del despliegue y diagnóstico
 - [`docs/legacy/`](docs/legacy/README.md) – el stack anterior con n8n
