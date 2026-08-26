@@ -113,6 +113,23 @@ npm run agent:chat -- --guion todos --pasos # los guiones, mostrando herramienta
 La conversación vive en memoria y no toca la tabla `Message`. Las reservas que
 se creen **sí son reales**: corré esto contra desarrollo.
 
+## Cambiar la contraseña del dashboard
+
+```bash
+npm run admin:password
+```
+
+Pide la contraseña por teclado (no queda en el historial del shell) e imprime
+el hash en los dos formatos que hacen falta:
+
+- **Vercel** — el hash tal cual.
+- **`backend/.env`** — con los `$` escapados como `\$`. Sin escapar,
+  dotenv-expand interpreta `$2b` como una variable y se come parte del hash.
+  `auth.ts` deshace ese escape al leerlo, así que ambos formatos funcionan.
+
+Después de cambiarla en Vercel hay que redeployar: las variables no se aplican
+al deploy que ya está hecho.
+
 ## Verificación
 
 ```bash

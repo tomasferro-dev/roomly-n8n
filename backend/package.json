@@ -15,7 +15,8 @@
     "postinstall": "prisma generate",
     "agent:chat": "tsx scripts/agent-chat.ts",
     "agent:check": "tsx scripts/agent-check.ts",
-    "agent:tools": "tsx scripts/agent-tools-check.ts"
+    "agent:tools": "tsx scripts/agent-tools-check.ts",
+    "admin:password": "tsx scripts/admin-password.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
