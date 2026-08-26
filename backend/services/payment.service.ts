@@ -4,7 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { scheduleHousekeeping } from "./reservation.service";
 import { enviarTexto } from "@/lib/channels/whatsapp";
 
-const BACKEND_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+/**
+ * URL pública, sin barra al final.
+ *
+ * El `replace` no es cosmético. Si NEXTAUTH_URL termina en "/", concatenarle
+ * "/api/v1/payments/webhook" produce una doble barra, y esa ruta devuelve un
+ * 308 en vez de un 200. Mercado Pago NO sigue redirects en las notificaciones:
+ * las cuenta como entrega fallida, reintenta unas pocas veces y abandona.
+ *
+ * El resultado es el peor posible: el huésped paga, MP cobra, y la reserva
+ * queda en PENDING_PAYMENT para siempre hasta que el cron la cancela. Sin
+ * ningún error visible de este lado.
+ */
+const BACKEND_URL = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 
 // ─── Crear preferencia de pago ────────────────────────────────────────────────
 
