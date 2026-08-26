@@ -14,10 +14,13 @@
  * dos consultas.
  */
 
-import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 
-export type Provider = "WHATSAPP" | "MERCADOPAGO";
+/**
+ * "SWEEP" no es un webhook: lo usa lib/sweep.ts para que un solo proceso corra
+ * el barrido por ventana de tiempo, apoyandose en el mismo indice unico.
+ */
+export type Provider = "WHATSAPP" | "MERCADOPAGO" | "SWEEP";
 
 /**
  * Intenta tomar un evento para procesarlo.
@@ -36,16 +39,20 @@ export async function reclamarEvento(
   }
 
   try {
-    await prisma.processedEvent.create({ data: { provider, externalId } });
-    return true;
+    // `createMany` con skipDuplicates en vez de `create` + catch del P2002.
+    // Los dos son atómicos, pero el segundo hace que Prisma escriba un
+    // `prisma:error` por cada colisión — y las colisiones acá son el
+    // funcionamiento NORMAL, no una falla. En producción eso llenaba los logs
+    // de errores falsos que tapan los de verdad.
+    //
+    // Devuelve cuántas filas insertó: 1 si ganamos, 0 si otro llegó primero.
+    const { count } = await prisma.processedEvent.createMany({
+      data: [{ provider, externalId }],
+      skipDuplicates: true,
+    });
+    return count === 1;
   } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2002"
-    ) {
-      return false; // ya lo tomó otra entrega
-    }
-    // Cualquier otro error (base caída, por ejemplo) no debería hacernos
+    // Cualquier error real (base caída, por ejemplo) no debería hacernos
     // perder el mensaje: seguimos adelante.
     console.warn("[dedup] no se pudo reclamar el evento:", err);
     return true;

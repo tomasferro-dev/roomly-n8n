@@ -103,9 +103,30 @@ No hay cola de jobs. Lo corto corre inline; lo diferido lo barre el cron.
 |---|---|
 | Agendar limpieza | Inline, al confirmarse la reserva o el pago |
 | Avisar pago acreditado | Inline, en el webhook de MP |
-| Expirar reservas impagas | Cron, cada 15 min |
-| Cancelar reservas huérfanas | Cron, cada 15 min |
-| Purgar `ProcessedEvent` viejos | Cron, cada 15 min |
+| Expirar reservas impagas | Barrido oportunista + cron diario |
+| Cancelar reservas huérfanas | Barrido oportunista + cron diario |
+| Purgar `ProcessedEvent` viejos | Cron diario |
+
+### Por qué el barrido es oportunista
+
+El plan Hobby de Vercel sólo admite **crons diarios**. Con un único barrido al
+día, una reserva impaga puede quedar bloqueando la habitación hasta 24 horas
+después de su vencimiento; el promedio es medio día. Con siete habitaciones,
+eso es una habitación sin vender.
+
+En vez de pagar el plan Pro o sumar un servicio externo de cron, se aprovecha
+el tráfico que ya existe: cada mensaje de WhatsApp dispara un barrido, con un
+límite de uno cada 15 minutos. Corre dentro de `after()`, después de haberle
+contestado al huésped, así que no le agrega latencia a la conversación.
+
+El razonamiento: una habitación bloqueada de más sólo molesta cuando alguien
+está tratando de reservar — o sea, justo cuando hay tráfico. Sin tráfico, el
+cron diario alcanza.
+
+La exclusión mutua entre invocaciones concurrentes usa el mismo índice único de
+`ProcessedEvent`: se reclama el bucket de 15 minutos al que pertenece el
+instante actual y sólo una invocación gana el insert. Un contador en memoria no
+serviría, porque en serverless cada instancia tiene la suya.
 
 Una reserva **huérfana** es una que quedó en `PENDING_PAYMENT` sin fila de
 `Payment`, porque la preferencia de Mercado Pago falló después de haberse

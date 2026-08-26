@@ -5,14 +5,20 @@
  * worker vivía en el proceso del server: en Vercel las funciones se congelan
  * entre invocaciones, así que no habría procesado nada.
  *
- * Lo llama Vercel Cron cada 15 minutos (ver vercel.json). Barre por fecha en
- * vez de depender de jobs programados, que se pierden si el proceso que los
- * tenía encolados se reinicia.
+ * Lo llama Vercel Cron una vez al día (ver vercel.json): el plan Hobby no
+ * admite crons más frecuentes. Para no dejar habitaciones bloqueadas medio día
+ * de más, el grueso del trabajo lo hace el barrido oportunista de lib/sweep.ts,
+ * que se dispara con el tráfico real. Este cron es la red que cubre los días
+ * sin tráfico.
+ *
+ * Barre por fecha en vez de depender de jobs programados, que se pierden si el
+ * proceso que los tenía encolados se reinicia.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { expirePendingPayments } from "@/services/payment.service";
 import { limpiarEventosViejos } from "@/lib/dedup";
+import { limpiarMarcasDeBarrido } from "@/lib/sweep";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,12 +47,14 @@ export async function GET(req: NextRequest) {
   try {
     const { vencidas, huerfanas } = await expirePendingPayments();
     const eventos = await limpiarEventosViejos();
+    const marcas  = await limpiarMarcasDeBarrido();
 
     const resumen = {
       ok: true,
       reservasVencidas: vencidas,
       reservasHuerfanas: huerfanas,
       eventosPurgados: eventos,
+      marcasPurgadas: marcas,
       durationMs: Date.now() - inicio,
     };
     console.log("[cron] barrido completo:", resumen);

@@ -18,6 +18,7 @@ import {
   type MensajeEntrante,
 } from "@/lib/channels/whatsapp";
 import { reclamarEvento } from "@/lib/dedup";
+import { barrerSiCorresponde } from "@/lib/sweep";
 import { runAgent } from "@/lib/agent/run";
 import { saveRun } from "@/lib/agent/trace";
 import { resolveHotelId, loadBotConfig } from "@/lib/agent/config";
@@ -99,6 +100,11 @@ export async function POST(req: NextRequest) {
       console.error("[whatsapp:webhook] fallo procesando el mensaje:", err);
       await enviarDisculpa(mensaje.phoneNumberId, mensaje.from);
     }
+
+    // Barrido oportunista, DESPUES de haberle contestado al huesped. El plan
+    // Hobby de Vercel solo admite crons diarios, asi que aprovechamos el
+    // trafico real para no dejar habitaciones bloqueadas medio dia de mas.
+    await barrerSiCorresponde();
   });
 
   return NextResponse.json({ ok: true }, { status: 200 });
