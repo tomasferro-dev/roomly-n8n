@@ -1,0 +1,12 @@
+# Archivos que no tienen por qué subir al build de Vercel.
+#
+# Ninguno de estos llega a producción de todos modos: Next.js sólo sirve sus
+# rutas y lo que está en `public/`, así que un .md del repo no es alcanzable
+# por HTTP. Esto es para que tampoco se suban al build.
+
+BITACORA.md
+docs/
+README.md
+
+# Restos del stack anterior, ya archivados
+docs/legacy/

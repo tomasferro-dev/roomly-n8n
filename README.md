@@ -171,6 +171,7 @@ Después del primer deploy hay que apuntar dos webhooks al dominio de Vercel:
 
 ## Documentación
 
+- [`BITACORA.md`](BITACORA.md) – estado del proyecto y traspaso entre sesiones
 - [`docs/arquitectura.md`](docs/arquitectura.md) – cómo encaja todo
 - [`docs/BACKEND.md`](docs/BACKEND.md) – modelo de datos y endpoints
 - [`docs/mercadopago.md`](docs/mercadopago.md) – flujo de pago
