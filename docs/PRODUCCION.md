@@ -124,6 +124,22 @@ Un `status` distinto de `OK` trae el error en la columna `error`.
 teléfono, sí: el turno se persiste **después** de que la Graph API acepta el
 envío. Es la forma más directa de separar "el agente falló" de "el envío falló".
 
+**¿Salió el email de confirmación?**
+
+```sql
+SELECT a.action, a.after, a."createdAt", r.code
+FROM public."AuditLog" a JOIN public."Reservation" r ON r.id = a."reservationId"
+WHERE a.action LIKE 'EMAIL_%' ORDER BY a."createdAt" DESC LIMIT 10;
+```
+
+Tres resultados posibles: `EMAIL_ENVIADO` con el id de Resend, `EMAIL_FALLIDO`
+con el motivo, o `EMAIL_OMITIDO` si el huésped no dejó correo. Si no aparece
+ninguna fila para una reserva confirmada, el deploy que la procesó es anterior
+a esta trazabilidad.
+
+**Ojo: `Payment.notifiedAt` NO dice nada del email.** Se setea después del envío
+por WhatsApp, y el email sale antes y sin interrumpir nada si falla.
+
 **¿Llegó el webhook de Mercado Pago?**
 
 ```sql

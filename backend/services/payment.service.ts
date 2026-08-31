@@ -364,7 +364,10 @@ async function enviarConfirmacionSiHayEmail(
   },
   info: { paymentType: string; amount: number }
 ): Promise<void> {
-  if (!res.guest.email) return;
+  if (!res.guest.email) {
+    await registrarEmail(res.code, "EMAIL_OMITIDO", { motivo: "el huésped no dejó email" });
+    return;
+  }
 
   const esSenia = info.paymentType === "DEPOSIT";
   // La seña es el 15%, así que el total se reconstruye desde lo pagado.
@@ -386,5 +389,46 @@ async function enviarConfirmacionSiHayEmail(
     totalReserva,
   });
 
-  if (id) console.log(`[email] confirmación de ${res.code} enviada a ${res.guest.email} (${id})`);
+  // Dejar rastro pase lo que pase. Antes, si el envío fallaba, sólo quedaba
+  // una línea en los logs de Vercel: desde la base era indistinguible de "el
+  // huésped no dio email" o de "el código no está desplegado". Eso convertía
+  // cualquier diagnóstico en adivinanza.
+  if (id) {
+    console.log(`[email] confirmación de ${res.code} enviada a ${res.guest.email} (${id})`);
+    await registrarEmail(res.code, "EMAIL_ENVIADO", { to: res.guest.email, resendId: id });
+  } else {
+    console.warn(`[email] no se pudo enviar la confirmación de ${res.code}`);
+    await registrarEmail(res.code, "EMAIL_FALLIDO", {
+      to: res.guest.email,
+      motivo: process.env.RESEND_API_KEY
+        ? "Resend rechazó el envío — ver los logs de la función"
+        : "RESEND_API_KEY no está configurada en este deploy",
+    });
+  }
+}
+
+/**
+ * Anota el resultado del envío en AuditLog.
+ *
+ * Se usa AuditLog en vez de una columna nueva para no migrar el esquema por
+ * una traza: ya tiene reservationId, acción y un JSON libre, y es donde
+ * naturalmente se busca "qué le pasó a esta reserva".
+ */
+async function registrarEmail(
+  code: string,
+  accion: "EMAIL_ENVIADO" | "EMAIL_FALLIDO" | "EMAIL_OMITIDO",
+  detalle: Record<string, unknown>
+): Promise<void> {
+  try {
+    const r = await prisma.reservation.findUnique({
+      where: { code },
+      select: { id: true },
+    });
+    if (!r) return;
+    await prisma.auditLog.create({
+      data: { reservationId: r.id, action: accion, after: detalle as object, performedBy: "system" },
+    });
+  } catch (err) {
+    console.warn("[email] no se pudo registrar el resultado del envío:", err);
+  }
 }
