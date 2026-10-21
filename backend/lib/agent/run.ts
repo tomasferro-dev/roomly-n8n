@@ -33,7 +33,15 @@ const MAX_ITERATIONS = 6;
 
 /** Reintentos ante errores transitorios de la API de Gemini. */
 const MAX_RETRIES = 2;
-const RETRY_BASE_MS = 600;
+const RETRY_BASE_MS = 1000;
+
+/**
+ * Modelo al que se cae cuando el principal sigue devolviendo 503/429 después de
+ * agotar los reintentos. Es de otra generación a propósito: los picos de
+ * demanda golpean a la familia nueva, y un segundo modelo de la misma familia
+ * se satura junto con el primero.
+ */
+const FALLBACK_MODEL = "gemini-2.5-flash-lite";
 
 /**
  * Tope de espera cuando Gemini nos dice cuánto falta para reintentar.
@@ -142,7 +150,7 @@ export async function runAgent(
       iterations = i + 1;
       const turnStart = Date.now();
 
-      const response = await generateWithRetry({
+      const { response, model: modelUsed } = await generateWithFallback({
         model: config.model,
         contents,
         config: {
@@ -152,6 +160,8 @@ export async function runAgent(
           tools: [{ functionDeclarations }],
         },
       });
+      // AgentRun guarda el modelo que realmente contestó, no el configurado.
+      base.model = modelUsed;
 
       promptTokens += response.usageMetadata?.promptTokenCount ?? 0;
       outputTokens += response.usageMetadata?.candidatesTokenCount ?? 0;
@@ -297,4 +307,27 @@ async function generateWithRetry(
   }
 
   throw lastError;
+}
+
+type GenerateParams = Parameters<GoogleGenAI["models"]["generateContent"]>[0];
+
+/**
+ * Intenta con el modelo configurado; si falla por un error transitorio incluso
+ * después de los reintentos, hace una última ronda con FALLBACK_MODEL. Los
+ * errores no transitorios (401, 400) se propagan sin cambiar de modelo.
+ */
+async function generateWithFallback(params: GenerateParams) {
+  try {
+    return { response: await generateWithRetry(params), model: params.model };
+  } catch (err) {
+    if (!isTransient(err) || params.model === FALLBACK_MODEL) throw err;
+
+    console.warn(
+      `[agent:run] ${params.model} no disponible, probando ${FALLBACK_MODEL}`
+    );
+    return {
+      response: await generateWithRetry({ ...params, model: FALLBACK_MODEL }),
+      model: FALLBACK_MODEL,
+    };
+  }
 }
