@@ -47,10 +47,10 @@ export async function barrerSiCorresponde(): Promise<void> {
     const meToca = await reclamarEvento("SWEEP", bucketActual());
     if (!meToca) return;
 
-    const { vencidas, huerfanas } = await expirePendingPayments();
-    if (vencidas > 0 || huerfanas > 0) {
+    const { confirmadas, vencidas, huerfanas } = await expirePendingPayments();
+    if (confirmadas > 0 || vencidas > 0 || huerfanas > 0) {
       console.log(
-        `[sweep] oportunista: ${vencidas} vencidas, ${huerfanas} huérfanas`
+        `[sweep] oportunista: ${confirmadas} confirmadas por reconciliación, ${vencidas} vencidas, ${huerfanas} huérfanas`
       );
     }
   } catch (err) {

@@ -15,6 +15,7 @@ import { normalizeHistory } from "../lib/agent/memory";
 import { extraerMensaje, normalizarDestinatario } from "../lib/channels/whatsapp";
 import { verifyMetaSignature, verifyMercadoPagoSignature } from "../lib/signatures";
 import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "../lib/privacy";
+import { accionTrasReconciliar } from "../services/payment.service";
 
 const TZ = "America/Argentina/Buenos_Aires";
 let fail = 0;
@@ -175,6 +176,23 @@ check("steps: conserva el teléfono público del hotel",
   (limpios[1] as { result: { hotelPhone: string } }).result.hotelPhone, "2614000000");
 check("steps: no modifica el original",
   (pasos[1] as { result: { guestPhone: string } }).result.guestPhone, "5493510000000");
+
+// ─── Reconciliación de pagos: cuándo se cancela una reserva ──────────────────
+// Lo crítico: nunca cancelar una reserva cuyo pago pudo haberse aprobado.
+
+const AHORA = new Date("2026-10-22T20:00:00Z");
+const VIGENTE = new Date("2026-10-23T02:00:00Z");
+const VENCIDO_RECIEN = new Date("2026-10-22T19:00:00Z");
+const VENCIDO_HACE_2_DIAS = new Date("2026-10-20T19:00:00Z");
+
+check("pago aprobado encontrado → confirma", accionTrasReconciliar("CONFIRMADA", VENCIDO_RECIEN, AHORA), "CONFIRMADA");
+check("vigente sin pago → espera", accionTrasReconciliar("SIN_PAGO", VIGENTE, AHORA), "ESPERAR");
+check("vencido y MP dice que no hay pago → cancela", accionTrasReconciliar("SIN_PAGO", VENCIDO_RECIEN, AHORA), "EXPIRAR");
+check("vencido pero MP no respondió → NO cancela", accionTrasReconciliar("ERROR", VENCIDO_RECIEN, AHORA), "ESPERAR");
+check("vencido y confirmándose en paralelo → NO cancela", accionTrasReconciliar("EN_CURSO", VENCIDO_RECIEN, AHORA), "ESPERAR");
+check("vencido hace 2 días y MP sigue sin responder → cancela", accionTrasReconciliar("ERROR", VENCIDO_HACE_2_DIAS, AHORA), "EXPIRAR");
+check("vencido hace 2 días pero confirmándose → NO cancela", accionTrasReconciliar("EN_CURSO", VENCIDO_HACE_2_DIAS, AHORA), "ESPERAR");
+check("pago ya no pendiente → no hace nada", accionTrasReconciliar("NO_APLICA", VENCIDO_RECIEN, AHORA), "ESPERAR");
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);

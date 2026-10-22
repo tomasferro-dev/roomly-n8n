@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { scheduleHousekeeping } from "./reservation.service";
 import { enviarTexto } from "@/lib/channels/whatsapp";
 import { enviarConfirmacionReserva } from "@/lib/email";
+import { reclamarEvento } from "@/lib/dedup";
 
 /**
  * URL pública, sin barra al final.
@@ -186,6 +187,75 @@ export async function handleMPWebhook(mpPaymentId: string) {
   }
 }
 
+// ─── Reconciliación: preguntarle a MP en vez de esperar el aviso ──────────────
+
+export type ResultadoReconciliacion =
+  | "CONFIRMADA"   // había un pago aprobado y se confirmó la reserva ahora
+  | "EN_CURSO"     // había un pago aprobado, pero otro proceso ya lo está confirmando
+  | "SIN_PAGO"     // MP no tiene ningún pago aprobado para la reserva
+  | "NO_APLICA"    // la reserva no tiene un pago pendiente
+  | "ERROR";       // no se pudo consultar a MP; no se sabe si hay pago
+
+/**
+ * Busca en Mercado Pago un pago aprobado para la reserva y, si lo hay, la
+ * confirma con la misma lógica que el webhook.
+ *
+ * Existe porque el aviso de MP se puede perder: un notification_url mal
+ * armado, una redirección, una caída. Pasó el 22/10/2026 — el huésped pagó, MP
+ * mandó el aviso a un dominio que redirigía, y la reserva quedó pendiente con
+ * la plata cobrada. Preguntar por `external_reference` (el id de la reserva)
+ * no depende de que el aviso llegue.
+ *
+ * Reclama el mismo evento de deduplicación que el webhook ("MERCADOPAGO",
+ * id del pago): si el aviso real llega al mismo tiempo, sólo uno de los dos
+ * confirma y avisa al huésped. `handleMPWebhook` no es idempotente.
+ *
+ * Nunca lanza.
+ */
+export async function reconciliarPago(reservationId: string): Promise<ResultadoReconciliacion> {
+  try {
+    const payment = await prisma.payment.findUnique({
+      where: { reservationId },
+      select: { status: true },
+    });
+    if (!payment || payment.status !== "PENDING") return "NO_APLICA";
+
+    const busqueda = await new MPPayment(mpClient).search({
+      options: { external_reference: reservationId },
+    });
+    const aprobado = busqueda.results?.find((p) => p.status === "approved" && p.id != null);
+    if (!aprobado) return "SIN_PAGO";
+
+    const mpPaymentId = String(aprobado.id);
+    const meToca = await reclamarEvento("MERCADOPAGO", mpPaymentId);
+    if (!meToca && !(await reclamoTrabado(mpPaymentId))) return "EN_CURSO";
+
+    await handleMPWebhook(mpPaymentId);
+    console.log(`[pagos:reconciliar] reserva ${reservationId} confirmada sin aviso de MP (pago ${mpPaymentId})`);
+    return "CONFIRMADA";
+  } catch (err) {
+    console.warn(`[pagos:reconciliar] no se pudo consultar MP para ${reservationId}:`, err);
+    return "ERROR";
+  }
+}
+
+/** Pasado este tiempo, un aviso reclamado que no confirmó el pago se da por fallido. */
+const RECLAMO_TRABADO_MS = 10 * 60 * 1000;
+
+/**
+ * Si el evento de este pago ya estaba reclamado pero el pago sigue PENDING
+ * después de un rato, el intento anterior (webhook o reconciliación) se cortó
+ * a la mitad. Sin esto, la reserva quedaría pendiente para siempre: el evento
+ * reclamado impediría cualquier reintento.
+ */
+async function reclamoTrabado(mpPaymentId: string): Promise<boolean> {
+  const evento = await prisma.processedEvent.findUnique({
+    where: { provider_externalId: { provider: "MERCADOPAGO", externalId: mpPaymentId } },
+    select: { receivedAt: true },
+  });
+  return !!evento && Date.now() - evento.receivedAt.getTime() > RECLAMO_TRABADO_MS;
+}
+
 // ─── Auto-expiración (llamada desde BullMQ) ───────────────────────────────────
 
 /**
@@ -285,7 +355,11 @@ export async function notifyPaymentConfirmed(
  * se pierde para siempre; una fecha en la base sigue ahí y el próximo barrido
  * la levanta.
  *
- * Cubre dos casos:
+ * Antes de cancelar nada, reconcilia cada pago pendiente contra Mercado Pago
+ * (ver reconciliarPago): confirma los que ya se pagaron aunque el aviso no
+ * haya llegado.
+ *
+ * Cubre dos casos de cancelación:
  *   1. Pagos vencidos — el equivalente directo del job viejo.
  *   2. Reservas PENDING_PAYMENT SIN fila de Payment. Pasa si la preferencia de
  *      Mercado Pago falla después de haberse creado la reserva: quedan
@@ -293,19 +367,42 @@ export async function notifyPaymentConfirmed(
  *      para siempre.
  */
 export async function expirePendingPayments(): Promise<{
+  confirmadas: number;
   vencidas: number;
   huerfanas: number;
 }> {
   const ahora = new Date();
 
-  const vencidos = await prisma.payment.findMany({
-    where: { status: "PENDING", expiresAt: { lt: ahora } },
-    select: { reservationId: true },
+  // Todos los pagos pendientes, vencidos o no, se reconcilian contra MP: los
+  // vigentes para confirmarlos aunque el aviso se haya perdido, y los vencidos
+  // para no cancelar NUNCA una reserva que el huésped ya pagó.
+  const pendientes = await prisma.payment.findMany({
+    where: { status: "PENDING" },
+    select: { reservationId: true, expiresAt: true },
+    orderBy: { expiresAt: "asc" },
+    take: MAX_RECONCILIAR_POR_BARRIDO,
   });
 
-  for (const { reservationId } of vencidos) {
+  let confirmadas = 0;
+  let vencidas = 0;
+
+  for (const { reservationId, expiresAt } of pendientes) {
+    const resultado = await reconciliarPago(reservationId);
+    const accion = accionTrasReconciliar(resultado, expiresAt, ahora);
+    if (accion === "CONFIRMADA") {
+      confirmadas++;
+      continue;
+    }
+    if (accion === "ESPERAR") {
+      if (expiresAt < ahora) {
+        console.warn(`[cron] ${reservationId} vencida pero sin respuesta concluyente de MP (${resultado}); no se cancela todavía`);
+      }
+      continue;
+    }
+
     try {
       await expirePayment(reservationId);
+      vencidas++;
     } catch (err) {
       console.error(`[cron] no se pudo expirar ${reservationId}:`, err);
     }
@@ -341,8 +438,36 @@ export async function expirePendingPayments(): Promise<{
     }
   }
 
-  return { vencidas: vencidos.length, huerfanas: huerfanas.length };
+  return { confirmadas, vencidas, huerfanas: huerfanas.length };
 }
+
+/**
+ * Qué hacer con un pago pendiente después de preguntarle a MP. Función pura,
+ * probada en agent:check, porque un error acá cancela reservas ya pagadas.
+ *
+ *   CONFIRMADA → se confirmó ahora.
+ *   EXPIRAR    → vencido y MP confirmó que no hay pago aprobado.
+ *   ESPERAR    → vigente, o vencido sin respuesta concluyente de MP. Si MP no
+ *                responde, se cancela igual pasado un día de vencido, para que
+ *                una caída larga de MP no deje habitaciones bloqueadas.
+ */
+export function accionTrasReconciliar(
+  resultado: ResultadoReconciliacion,
+  expiresAt: Date,
+  ahora: Date
+): "CONFIRMADA" | "EXPIRAR" | "ESPERAR" {
+  if (resultado === "CONFIRMADA") return "CONFIRMADA";
+  if (expiresAt >= ahora) return "ESPERAR";
+  if (resultado === "SIN_PAGO") return "EXPIRAR";
+  const venceHaceMucho = ahora.getTime() - expiresAt.getTime() > GRACIA_SIN_RESPUESTA_MS;
+  return resultado === "ERROR" && venceHaceMucho ? "EXPIRAR" : "ESPERAR";
+}
+
+/** Tope de consultas a MP por barrido, para no exceder el maxDuration de la función. */
+const MAX_RECONCILIAR_POR_BARRIDO = 50;
+
+/** Si MP no responde, una reserva vencida se cancela igual pasado este margen. */
+const GRACIA_SIN_RESPUESTA_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Manda la confirmación por email, si el huésped dejó uno.

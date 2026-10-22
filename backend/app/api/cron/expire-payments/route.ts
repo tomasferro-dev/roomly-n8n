@@ -45,12 +45,13 @@ export async function GET(req: NextRequest) {
 
   const inicio = Date.now();
   try {
-    const { vencidas, huerfanas } = await expirePendingPayments();
+    const { confirmadas, vencidas, huerfanas } = await expirePendingPayments();
     const eventos = await limpiarEventosViejos();
     const marcas  = await limpiarMarcasDeBarrido();
 
     const resumen = {
       ok: true,
+      reservasConfirmadasPorReconciliacion: confirmadas,
       reservasVencidas: vencidas,
       reservasHuerfanas: huerfanas,
       eventosPurgados: eventos,

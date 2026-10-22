@@ -61,6 +61,25 @@ de Meta: alcanza para probar, no para huéspedes reales.
 El `notification_url` no se configura a mano: lo manda el backend en cada
 preferencia, construido desde `NEXTAUTH_URL`.
 
+### Si el aviso de Mercado Pago no llega
+
+El sistema no depende sólo del aviso (webhook) de Mercado Pago. Además le
+pregunta directamente a MP si hay un pago aprobado para la reserva
+(`reconciliarPago`, por `external_reference`) en tres momentos:
+
+- cuando el huésped pregunta por su reserva (`consultar_reserva`, el típico "ya pagué");
+- en cada barrido oportunista (como mucho cada 15 minutos, con tráfico);
+- en el cron diario, **antes** de cancelar por vencimiento.
+
+Una reserva vencida sólo se cancela si MP confirma que no hay pago aprobado.
+Si MP no responde, se espera al próximo barrido; pasado un día de vencida se
+cancela igual. El caso que lo motivó: el 22/10/2026 el `notification_url`
+apuntaba a un dominio que redirigía y la reserva RML-8030 quedó pendiente con
+el pago acreditado.
+
+El `notification_url` sale de `NEXTAUTH_URL`: tiene que ser el dominio final
+(`https://roomly.com.ar`), no uno que redirija.
+
 ### Variables de seguridad de los webhooks
 
 Las tres son opcionales: si faltan, el sistema funciona como antes (sin validar

@@ -28,7 +28,7 @@ import {
   cancelReservation,
   findReservationByCode,
 } from "@/services/reservation.service";
-import { createPaymentPreference } from "@/services/payment.service";
+import { createPaymentPreference, reconciliarPago } from "@/services/payment.service";
 import { CreateReservationSchema, UpdateReservationSchema } from "@/lib/validations";
 import type { AgentContext, ToolHandler } from "./types";
 
@@ -348,9 +348,20 @@ const handlers: Record<string, ToolHandler> = {
     const code = str(args.code)?.toUpperCase();
     if (!code) return { error: "Falta el código RML." };
 
-    const reservation = await findReservationByCode(code);
+    let reservation = await findReservationByCode(code);
     if (!reservation) {
       return { error: `No existe ninguna reserva con el código ${code}.` };
+    }
+
+    // Si sigue esperando el pago, se le pregunta a Mercado Pago en el momento
+    // en vez de depender de que su aviso haya llegado. Es el caso típico de
+    // "ya pagué": el huésped pagó, el aviso se demoró o se perdió, y sin esto
+    // el bot le contestaría que todavía no ve el pago.
+    if (reservation.status === "PENDING_PAYMENT") {
+      const resultado = await reconciliarPago(reservation.id);
+      if (resultado === "CONFIRMADA" || resultado === "EN_CURSO") {
+        reservation = (await findReservationByCode(code)) ?? reservation;
+      }
     }
 
     return {
