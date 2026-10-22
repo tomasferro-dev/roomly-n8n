@@ -6,7 +6,8 @@
  *
  * Esta ruta NO pasa por el middleware de autenticación: su matcher cubre
  * `/dashboard/*` y `/api/v1/*`, y esto vive en `/api/whatsapp/*`. Meta no envía
- * credenciales; la verificación es por el token compartido en el GET.
+ * credenciales: el GET se verifica con el token compartido, y cada POST con la
+ * firma `X-Hub-Signature-256` cuando WHATSAPP_APP_SECRET está configurada.
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -24,6 +25,10 @@ import { saveRun } from "@/lib/agent/trace";
 import { resolveHotelId, loadBotConfig } from "@/lib/agent/config";
 import { logInteraction } from "@/services/conversation.service";
 import type { AgentContext } from "@/lib/agent/types";
+import { verifyMetaSignature } from "@/lib/signatures";
+
+/** Para avisar una sola vez por instancia que falta el App Secret. */
+let avisoSinSecreto = false;
 
 // Prisma y el SDK de Gemini necesitan el runtime de Node, no el de Edge.
 export const runtime = "nodejs";
@@ -78,9 +83,26 @@ export async function GET(req: NextRequest) {
  * que corriera el agente.
  */
 export async function POST(req: NextRequest) {
+  // El cuerpo se lee CRUDO: la firma de Meta se calcula sobre los bytes tal
+  // como llegaron, y volver a serializar el JSON parseado da otra firma.
+  const raw = await req.text();
+
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+  if (appSecret) {
+    if (!verifyMetaSignature(raw, req.headers.get("x-hub-signature-256"), appSecret)) {
+      console.warn("[whatsapp:webhook] firma X-Hub-Signature-256 inválida o ausente; se rechaza");
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+  } else if (!avisoSinSecreto) {
+    // Sin App Secret configurado se sigue aceptando todo, como antes, para no
+    // dejar mudo al bot en un deploy que todavía no tiene la variable cargada.
+    avisoSinSecreto = true;
+    console.warn("[whatsapp:webhook] WHATSAPP_APP_SECRET no está configurada: no se valida la firma de Meta");
+  }
+
   let payload: unknown;
   try {
-    payload = await req.json();
+    payload = JSON.parse(raw);
   } catch {
     return NextResponse.json({ ok: true }, { status: 200 });
   }

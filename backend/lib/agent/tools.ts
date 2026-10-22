@@ -210,6 +210,28 @@ async function buscarReservaPendiente(
   };
 }
 
+/** Máximo de reservas impagas y vigentes que puede tener un mismo teléfono. */
+export const MAX_PENDIENTES_POR_TELEFONO = 2;
+
+/**
+ * Reservas PENDING_PAYMENT del teléfono que todavía bloquean una habitación:
+ * con pago pendiente sin vencer, o sin fila de Payment (recién creadas o
+ * huérfanas que el barrido todavía no limpió).
+ */
+async function contarPendientesVigentes(phone: string, hotelId: string): Promise<number> {
+  return prisma.reservation.count({
+    where: {
+      hotelId,
+      status: "PENDING_PAYMENT",
+      guest: { phone },
+      OR: [
+        { payment: null },
+        { payment: { status: "PENDING", expiresAt: { gt: new Date() } } },
+      ],
+    },
+  });
+}
+
 // ─── Handlers ─────────────────────────────────────────────────────────────────
 
 const handlers: Record<string, ToolHandler> = {
@@ -268,6 +290,20 @@ const handlers: Record<string, ToolHandler> = {
     // devolvemos la que ya existe con su link de pago original.
     const existente = await buscarReservaPendiente(ctx.phone, roomId, checkIn, checkOut);
     if (existente) return existente;
+
+    // Límite de reservas impagas por teléfono. Cada PENDING_PAYMENT bloquea una
+    // habitación hasta 24 h; sin tope, un mismo número (o un loop del modelo)
+    // podría dejar al hotel sin inventario sin pagar nada. Va DESPUÉS de la
+    // idempotencia: repetir la misma reserva no cuenta como una nueva.
+    const pendientes = await contarPendientesVigentes(ctx.phone, ctx.hotelId);
+    if (pendientes >= MAX_PENDIENTES_POR_TELEFONO) {
+      console.warn(`[agent:tool:crear_reserva] límite de ${MAX_PENDIENTES_POR_TELEFONO} reservas pendientes alcanzado`);
+      return {
+        error:
+          `El huésped ya tiene ${pendientes} reservas pendientes de pago. ` +
+          "Antes de crear otra tiene que pagar o cancelar alguna de las que ya tiene.",
+      };
+    }
 
     const parsed = CreateReservationSchema.safeParse({
       hotelId: ctx.hotelId,

@@ -14,6 +14,7 @@
 
 import type { Channel, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "@/lib/privacy";
 import type { AgentContext, AgentResult } from "./types";
 
 export async function saveRun(
@@ -25,13 +26,14 @@ export async function saveRun(
     await prisma.agentRun.create({
       data: {
         hotelId: ctx.hotelId,
-        phone: ctx.phone,
+        // Seudónimo, no el número: la traza no necesita identificar al huésped.
+        phone: seudonimizarTelefono(ctx.phone),
         channel: ctx.channel as Channel,
         inboundText,
         outboundText: result.text,
         status: result.status,
         error: result.error,
-        steps: result.steps as unknown as Prisma.InputJsonValue,
+        steps: seudonimizarTelefonosEnJson(result.steps) as unknown as Prisma.InputJsonValue,
         model: result.model,
         promptTokens: result.promptTokens,
         outputTokens: result.outputTokens,

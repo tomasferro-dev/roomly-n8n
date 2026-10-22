@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { handleMPWebhook } from "@/services/payment.service";
 import { reclamarEvento } from "@/lib/dedup";
+import { verifyMercadoPagoSignature } from "@/lib/signatures";
 
 /**
  * POST /api/v1/payments/webhook
@@ -27,6 +28,27 @@ export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
+
+  // Firma de Mercado Pago. Se valida SOLO si la notificación trae
+  // `x-signature`: la documentación no garantiza que las notificaciones del
+  // `notification_url` de la preferencia ni las IPN (`topic`/`id`) vengan
+  // firmadas, y rechazarlas dejaría pagos cobrados sin confirmar. Lo que sí
+  // protege siempre es que handleMPWebhook consulta el pago contra la API de
+  // MP antes de confirmar nada; la firma corta antes las falsificaciones.
+  const mpSecret  = process.env.MP_WEBHOOK_SECRET;
+  const signature = req.headers.get("x-signature");
+  if (mpSecret && signature) {
+    const valida = verifyMercadoPagoSignature({
+      header:    signature,
+      requestId: req.headers.get("x-request-id"),
+      dataId:    req.nextUrl.searchParams.get("data.id") ?? (body?.data?.id != null ? String(body.data.id) : null),
+      secret:    mpSecret,
+    });
+    if (!valida) {
+      console.warn("[pagos:webhook] x-signature inválida; se rechaza la notificación");
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
+  }
 
   const topic     = body?.type     ?? req.nextUrl.searchParams.get("topic");
   const paymentId = body?.data?.id ?? req.nextUrl.searchParams.get("id");

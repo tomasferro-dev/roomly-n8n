@@ -61,6 +61,26 @@ de Meta: alcanza para probar, no para huéspedes reales.
 El `notification_url` no se configura a mano: lo manda el backend en cada
 preferencia, construido desde `NEXTAUTH_URL`.
 
+### Variables de seguridad de los webhooks
+
+Las tres son opcionales: si faltan, el sistema funciona como antes (sin validar
+firmas y con SHA-256 sin clave para los teléfonos de las trazas).
+
+| Variable | De dónde sale | Efecto |
+|---|---|---|
+| `WHATSAPP_APP_SECRET` | Meta Developers → la app → Configuración de la app → Básica → **Clave secreta de la app** | Cada POST del webhook de WhatsApp tiene que traer `X-Hub-Signature-256` válida; si no, 401. |
+| `MP_WEBHOOK_SECRET` | Mercado Pago → Tus integraciones → la aplicación → **Webhooks → Configurar notificaciones** → clave secreta | Si la notificación trae `x-signature`, se valida; si es inválida, 401. Las que llegan sin firma se siguen aceptando (el pago se verifica igual contra la API de MP). |
+| `PHONE_HASH_SECRET` | Cualquier cadena aleatoria larga (si falta, se usa `AUTH_SECRET`) | Clave del seudónimo del teléfono en `AgentRun`. No cambiarla: los seudónimos dejarían de coincidir con los anteriores. |
+
+**Cuidado con `MP_WEBHOOK_SECRET`:** una variable con ese nombre ya estaba cargada
+en Vercel sin usarse. Si su valor no es exactamente la clave del panel de
+Mercado Pago, las notificaciones firmadas se rechazan y **los pagos dejan de
+confirmarse**. Antes de desplegar, verificarla o borrarla.
+
+**Cuidado con `WHATSAPP_APP_SECRET`:** si se carga un valor equivocado, el bot
+deja de responder (todos los mensajes dan 401). Después de cargarla, mandar un
+mensaje de prueba y revisar que aparezca un `AgentRun` nuevo.
+
 ## Límites actuales
 
 Ninguno es un bug. Son las condiciones bajo las que está corriendo hoy.
@@ -200,9 +220,14 @@ ahora reglas de formato explícitas.
 
 ## Deuda conocida
 
-- **El webhook de Mercado Pago no valida firma.** El daño está acotado porque el
-  pago se verifica contra la API de MP antes de confirmar nada, pero conviene
-  validar el header `x-signature`.
+- **El webhook de Mercado Pago valida la firma solo si viene.** Las
+  notificaciones sin `x-signature` se siguen aceptando; el pago se verifica
+  contra la API de MP antes de confirmar nada.
+- **Auth.js falla abierto fuera de Vercel.** Corriendo `next start` local sin
+  `AUTH_TRUST_HOST=true`, Auth.js tira `UntrustedHost` y el middleware deja
+  pasar el dashboard y `/api/v1` sin credenciales. En Vercel no pasa (verificado:
+  producción responde 401), pero cualquier deploy fuera de Vercel necesita esa
+  variable.
 - **Autenticación de un solo admin** en variables de entorno, sin rotación ni
   recuperación de contraseña.
 - **`middleware.ts` quedó deprecado** en Next 16 a favor de `proxy`. El build lo

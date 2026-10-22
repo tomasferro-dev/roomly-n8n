@@ -6,7 +6,7 @@ import { logInteraction } from "@/services/conversation.service";
  * POST /api/v1/conversations/log
  * Persiste un turno de la conversación de WhatsApp (mensaje del usuario y/o
  * respuesta del bot). Lo llama el nodo "Logging" de n8n tras responder.
- * Protegido por el middleware vía `_s` (query) o header `x-n8n-secret`.
+ * Protegido por el middleware: sesión del panel o header `x-n8n-secret`.
  *
  * Body JSON: { phone, userMessage?, botMessage?, channel?, waTimestamp?, hotelId? }
  */
