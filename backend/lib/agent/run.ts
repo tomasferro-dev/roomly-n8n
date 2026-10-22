@@ -38,10 +38,15 @@ const RETRY_BASE_MS = 1000;
 /**
  * Modelo al que se cae cuando el principal sigue devolviendo 503/429 después de
  * agotar los reintentos. Es de otra generación a propósito: los picos de
- * demanda golpean a la familia nueva, y un segundo modelo de la misma familia
- * se satura junto con el primero.
+ * demanda golpean a una familia, y un segundo modelo de la misma familia se
+ * satura junto con el primero.
+ *
+ * Antes era gemini-2.5-flash-lite, pero Google lo retiró para cuentas nuevas:
+ * devolvía 404 justo cuando el principal estaba saturado y el bot quedaba sin
+ * salida (22/10/2026). Versión fija y no un alias "-latest", para que el
+ * comportamiento no cambie solo.
  */
-const FALLBACK_MODEL = "gemini-2.5-flash-lite";
+const FALLBACK_MODEL = "gemini-3.5-flash-lite";
 
 /**
  * Tope de espera cuando Gemini nos dice cuánto falta para reintentar.
