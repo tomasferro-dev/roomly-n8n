@@ -15,12 +15,13 @@ export default auth((req) => {
   const isMPWebhook = req.nextUrl.pathname === "/api/v1/payments/webhook";
   if (isMPWebhook) return NextResponse.next();
 
-  // API routes: require either session, X-N8N-Secret header, or _s query param
+  // API routes: require either session or the X-N8N-Secret header.
+  // El secreto ya no se acepta en la query string (`_s`): quedaba registrado en
+  // logs de acceso, de proxies y en el Referer. Solo lo usaba el flujo de n8n,
+  // que ya no está en uso (ver docs/legacy/).
   if (isApiProtected && !isLoggedIn) {
-    const headerSecret = req.headers.get("x-n8n-secret");
-    const querySecret  = req.nextUrl.searchParams.get("_s");
-    const secret = headerSecret ?? querySecret;
-    if (secret !== process.env.N8N_WEBHOOK_SECRET) {
+    const secret = req.headers.get("x-n8n-secret");
+    if (!secret || secret !== process.env.N8N_WEBHOOK_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }

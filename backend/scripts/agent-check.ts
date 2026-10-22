@@ -13,6 +13,8 @@ import "dotenv/config";
 import { nowInTimezone, buildSystemPrompt, DEFAULT_SYSTEM_PROMPT } from "../lib/agent/prompt";
 import { normalizeHistory } from "../lib/agent/memory";
 import { extraerMensaje, normalizarDestinatario } from "../lib/channels/whatsapp";
+import { verifyMetaSignature, verifyMercadoPagoSignature } from "../lib/signatures";
+import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "../lib/privacy";
 
 const TZ = "America/Argentina/Buenos_Aires";
 let fail = 0;
@@ -114,6 +116,65 @@ check("tolera null", extraerMensaje(null), null);
 check("saca el 9 de los moviles argentinos", normalizarDestinatario("5493510000000"), "543510000000");
 check("no toca un fijo argentino", normalizarDestinatario("543510000000"), "543510000000");
 check("no toca numeros de otros paises", normalizarDestinatario("5491112345678".replace("549","34")), "341112345678");
+
+// ─── Firmas de webhooks ───────────────────────────────────────────────────────
+// Valores esperados calculados aparte con Python (hmac + hashlib), no con el
+// mismo código que se prueba.
+
+// Meta escapa los no ASCII: "café" llega como caf + barra invertida + u00e9.
+// La barra se arma con fromCharCode para que ningún editor la reinterprete.
+const BARRA = String.fromCharCode(92);
+const cuerpoMeta = `{"entry":[{"changes":[{"value":{"messages":[{"text":{"body":"caf${BARRA}u00e9"}}]}}]}]}`;
+const firmaMeta = "sha256=0647e81b336aa45846bfdbaeb8c33319e30691dc1fa8fe65dab84eb648d49c57";
+check("Meta: el cuerpo de prueba trae el escape literal", cuerpoMeta.length, 80);
+
+check("Meta: firma válida sobre el cuerpo crudo",
+  verifyMetaSignature(cuerpoMeta, firmaMeta, "app-secret-de-prueba"), true);
+check("Meta: rechaza con otro App Secret",
+  verifyMetaSignature(cuerpoMeta, firmaMeta, "otro-secreto"), false);
+check("Meta: rechaza el JSON re-serializado (é sin escapar)",
+  verifyMetaSignature(JSON.stringify(JSON.parse(cuerpoMeta)), firmaMeta, "app-secret-de-prueba"), false);
+check("Meta: rechaza sin header", verifyMetaSignature(cuerpoMeta, null, "app-secret-de-prueba"), false);
+check("Meta: rechaza sin prefijo sha256=",
+  verifyMetaSignature(cuerpoMeta, firmaMeta.slice(7), "app-secret-de-prueba"), false);
+
+const mp = { requestId: "bb56a2f1-6aae-46ac-982e-9dcd3581d08e", dataId: "123456", secret: "mp-secret-de-prueba" };
+check("Mercado Pago: firma válida",
+  verifyMercadoPagoSignature({ ...mp, header: "ts=1704908010,v1=ab7d76bb7bc6e1d09a0c07cb87b36c6af0fceded4807055c37403321d7b177bd" }), true);
+check("Mercado Pago: tolera espacios y orden inverso en el header",
+  verifyMercadoPagoSignature({ ...mp, header: "v1=ab7d76bb7bc6e1d09a0c07cb87b36c6af0fceded4807055c37403321d7b177bd, ts=1704908010" }), true);
+check("Mercado Pago: rechaza otro data.id",
+  verifyMercadoPagoSignature({ ...mp, dataId: "999", header: "ts=1704908010,v1=ab7d76bb7bc6e1d09a0c07cb87b36c6af0fceded4807055c37403321d7b177bd" }), false);
+check("Mercado Pago: data.id alfanumérico va en minúsculas",
+  verifyMercadoPagoSignature({ requestId: "req-1", dataId: "ABC123DEF", secret: mp.secret,
+    header: "ts=1704908010,v1=7ae5009d25753809960da650fd5e4398994efad84d69f3fcb4974f21a5a630d6" }), true);
+check("Mercado Pago: rechaza header incompleto",
+  verifyMercadoPagoSignature({ ...mp, header: "ts=1704908010" }), false);
+
+// ─── Seudonimización de teléfonos en AgentRun ────────────────────────────────
+// Valor esperado calculado aparte con Python (hmac + hashlib).
+
+check("teléfono: HMAC truncado con prefijo h:",
+  seudonimizarTelefono("5493510000000", "clave-de-prueba"), "h:8d119c5288b904e8");
+check("teléfono: estable para el mismo número",
+  seudonimizarTelefono("5493510000000", "clave-de-prueba") === seudonimizarTelefono("5493510000000", "clave-de-prueba"), true);
+check("teléfono: distinto con otra clave",
+  seudonimizarTelefono("5493510000000", "otra-clave") === "h:8d119c5288b904e8", false);
+check("teléfono: no seudonimiza dos veces",
+  seudonimizarTelefono("h:8d119c5288b904e8", "clave-de-prueba"), "h:8d119c5288b904e8");
+
+const pasos = [
+  { kind: "model", text: "hola", calls: ["consultar_reserva"] },
+  { kind: "tool", name: "consultar_reserva", args: { code: "RML-1" },
+    result: { code: "RML-1", guestPhone: "5493510000000", hotelPhone: "2614000000" }, ok: true },
+];
+const limpios = seudonimizarTelefonosEnJson(pasos, "clave-de-prueba");
+check("steps: seudonimiza guestPhone anidado",
+  (limpios[1] as { result: { guestPhone: string } }).result.guestPhone, "h:8d119c5288b904e8");
+check("steps: conserva el teléfono público del hotel",
+  (limpios[1] as { result: { hotelPhone: string } }).result.hotelPhone, "2614000000");
+check("steps: no modifica el original",
+  (pasos[1] as { result: { guestPhone: string } }).result.guestPhone, "5493510000000");
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);

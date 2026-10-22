@@ -164,7 +164,7 @@ FROM "AgentRun", jsonb_array_elements(steps) AS step
 WHERE step->>'kind' = 'tool' AND (step->>'ok')::boolean = false
 GROUP BY 1 ORDER BY 2 DESC;
 
--- Conversaciones que terminaron mal
+-- Conversaciones que terminaron mal (phone es un seudónimo "h:...", no el número)
 SELECT phone, "inboundText", error, "createdAt"
 FROM "AgentRun" WHERE status <> 'OK' ORDER BY "createdAt" DESC LIMIT 20;
 ```
@@ -190,9 +190,15 @@ al `maxDuration` de la función y el dashboard se queda mudo sin avisar.
   horas. Fuera de esa ventana hace falta una plantilla aprobada por Meta.
 - **Autenticación de un solo admin**, en variables de entorno. Sin rotación ni
   recuperación de contraseña.
-- **El webhook de Mercado Pago no valida firma.** El daño está acotado porque
-  el pago se verifica contra la API de MP antes de confirmar nada, pero
-  conviene validar el header `x-signature`.
+- **Firmas de webhooks.** WhatsApp exige `X-Hub-Signature-256` si está
+  cargada `WHATSAPP_APP_SECRET`. Mercado Pago valida `x-signature` solo cuando
+  viene; sin firma se acepta, porque el pago se verifica igual contra su API.
+  Ver `PRODUCCION.md`.
+- **Teléfonos en las trazas.** `AgentRun` guarda un seudónimo (HMAC) del
+  teléfono, también dentro de `steps`. La tabla `Message` conserva el número
+  real porque la memoria del agente lo necesita para responder.
+- **Reservas impagas por teléfono.** `crear_reserva` rechaza una tercera
+  reserva pendiente de pago del mismo número.
 
 ## Estado del despliegue
 
