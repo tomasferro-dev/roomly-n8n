@@ -210,8 +210,13 @@ async function buscarReservaPendiente(
   };
 }
 
-/** Máximo de reservas impagas y vigentes que puede tener un mismo teléfono. */
-export const MAX_PENDIENTES_POR_TELEFONO = 2;
+/**
+ * Máximo de reservas impagas y vigentes que puede tener un mismo teléfono.
+ *
+ * TEMPORAL: en 100 mientras se prueba con pocos números de la lista blanca.
+ * Antes de abrir el bot al público, volver a un valor bajo (2).
+ */
+export const MAX_PENDIENTES_POR_TELEFONO = 100;
 
 /**
  * Reservas PENDING_PAYMENT del teléfono que todavía bloquean una habitación:
