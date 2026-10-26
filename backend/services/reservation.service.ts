@@ -83,16 +83,29 @@ export async function createReservation(input: CreateReservationInput) {
   // registrado en reservas anteriores del mismo huésped. Email y DNI sí se
   // actualizan porque son datos que el huésped puede corregir sin afectar el
   // historial (no aparecen en la vista de reservas pasadas).
-  const guestRecord = await prisma.guest.upsert({
-    where: { hotelId_phone: { hotelId, phone: guest.phone } },
-    update: { email: guest.email ?? undefined, dni: guest.dni ?? undefined },
-    create: {
-      hotelId,
-      name: guest.name,
-      phone: guest.phone,
-      email: guest.email,
-      dni: guest.dni,
-    },
+  const upsertGuest = () =>
+    prisma.guest.upsert({
+      where: { hotelId_phone: { hotelId, phone: guest.phone } },
+      update: { email: guest.email ?? undefined, dni: guest.dni ?? undefined },
+      create: {
+        hotelId,
+        name: guest.name,
+        phone: guest.phone,
+        email: guest.email,
+        dni: guest.dni,
+      },
+    });
+
+  // Dos altas simultáneas del mismo huésped nuevo pueden ver las dos que no
+  // existe e intentar crearlo: la segunda choca con la unicidad (hotel,
+  // teléfono) y devuelve P2002. Para entonces el huésped ya existe, así que
+  // repetir el upsert una vez lo resuelve como actualización. Sin esto, esa
+  // llamada fallaba con un error genérico en lugar de seguir hasta la
+  // verificación de disponibilidad (encontrado en la prueba de concurrencia
+  // del 26/10/2026).
+  const guestRecord = await upsertGuest().catch((err: unknown) => {
+    if ((err as { code?: string })?.code === "P2002") return upsertGuest();
+    throw err;
   });
 
   // 4. Create reservation inside a transaction
