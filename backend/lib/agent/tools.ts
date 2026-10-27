@@ -155,6 +155,42 @@ async function resolveRoomId(raw: string, hotelId: string): Promise<string> {
 }
 
 /**
+ * Mismo número aunque uno venga con "+" o espacios (el panel permite cargarlo
+ * a mano; WhatsApp lo manda sólo con dígitos).
+ */
+export function mismoTelefono(a: string, b: string): boolean {
+  const digitos = (s: string) => s.replace(/\D/g, "");
+  return digitos(a) !== "" && digitos(a) === digitos(b);
+}
+
+/** Respuesta única para "no existe" y "no es tuya": no confirma códigos ajenos. */
+const RESERVA_NO_ENCONTRADA = (code?: string) => ({
+  error: code
+    ? `No existe ninguna reserva con el código ${code} para este número.`
+    : "No existe ninguna reserva con ese id para este número.",
+});
+
+/**
+ * Control de titularidad: sólo el teléfono que hizo la reserva puede
+ * consultarla, modificarla o cancelarla por WhatsApp.
+ *
+ * El código RML tiene cuatro dígitos y el huésped lo comparte (capturas,
+ * reenvíos), así que no alcanza como prueba de que quien escribe es el
+ * titular. El teléfono sí: viene del webhook, no del modelo. Se compara acá y
+ * no en el prompt para que valga aunque el modelo reciba un id o un código
+ * ajeno.
+ */
+async function reservaDelTitular(id: string, ctx: AgentContext) {
+  const reserva = await prisma.reservation.findUnique({
+    where: { id },
+    select: { id: true, hotelId: true, guest: { select: { phone: true } } },
+  });
+  if (!reserva || reserva.hotelId !== ctx.hotelId) return null;
+  if (!mismoTelefono(reserva.guest.phone, ctx.phone)) return null;
+  return reserva;
+}
+
+/**
  * Reserva ya pendiente de pago para el mismo huésped, habitación y fechas.
  *
  * Devuelve el mismo shape que `crear_reserva`, reconstruyendo la URL de
@@ -349,13 +385,17 @@ const handlers: Record<string, ToolHandler> = {
     };
   },
 
-  async consultar_reserva(args) {
+  async consultar_reserva(args, ctx) {
     const code = str(args.code)?.toUpperCase();
     if (!code) return { error: "Falta el código RML." };
 
     let reservation = await findReservationByCode(code);
-    if (!reservation) {
-      return { error: `No existe ninguna reserva con el código ${code}.` };
+    if (
+      !reservation ||
+      reservation.hotelId !== ctx.hotelId ||
+      !mismoTelefono(reservation.guest.phone, ctx.phone)
+    ) {
+      return RESERVA_NO_ENCONTRADA(code);
     }
 
     // Si sigue esperando el pago, se le pregunta a Mercado Pago en el momento
@@ -374,7 +414,6 @@ const handlers: Record<string, ToolHandler> = {
       code: reservation.code,
       status: reservation.status,
       guestName: reservation.guestName ?? reservation.guest.name,
-      guestPhone: reservation.guest.phone,
       room: reservation.room.number,
       floor: reservation.room.floor,
       checkIn: reservation.checkIn.toISOString().slice(0, 10),
@@ -387,9 +426,10 @@ const handlers: Record<string, ToolHandler> = {
     };
   },
 
-  async modificar_reserva(args) {
+  async modificar_reserva(args, ctx) {
     const id = str(args.id);
     if (!id) return { error: "Falta el id interno de la reserva." };
+    if (!(await reservaDelTitular(id, ctx))) return RESERVA_NO_ENCONTRADA();
 
     const patch: Record<string, unknown> = {};
     const checkIn = str(args.checkIn);
@@ -424,9 +464,10 @@ const handlers: Record<string, ToolHandler> = {
     };
   },
 
-  async cancelar_reserva(args) {
+  async cancelar_reserva(args, ctx) {
     const id = str(args.id);
     if (!id) return { error: "Falta el id interno de la reserva." };
+    if (!(await reservaDelTitular(id, ctx))) return RESERVA_NO_ENCONTRADA();
 
     const cancelled = await cancelReservation(id, PERFORMED_BY);
     return { id: cancelled.id, code: cancelled.code, status: cancelled.status };

@@ -16,6 +16,7 @@ import { extraerMensaje, normalizarDestinatario } from "../lib/channels/whatsapp
 import { verifyMetaSignature, verifyMercadoPagoSignature } from "../lib/signatures";
 import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "../lib/privacy";
 import { accionTrasReconciliar } from "../services/payment.service";
+import { mismoTelefono } from "../lib/agent/tools";
 
 const TZ = "America/Argentina/Buenos_Aires";
 let fail = 0;
@@ -193,6 +194,12 @@ check("vencido y confirmándose en paralelo → NO cancela", accionTrasReconcili
 check("vencido hace 2 días y MP sigue sin responder → cancela", accionTrasReconciliar("ERROR", VENCIDO_HACE_2_DIAS, AHORA), "EXPIRAR");
 check("vencido hace 2 días pero confirmándose → NO cancela", accionTrasReconciliar("EN_CURSO", VENCIDO_HACE_2_DIAS, AHORA), "ESPERAR");
 check("pago ya no pendiente → no hace nada", accionTrasReconciliar("NO_APLICA", VENCIDO_RECIEN, AHORA), "ESPERAR");
+
+// ─── Titularidad: mismo teléfono con distinto formato ────────────────────────
+
+check("titular: mismo número con + y espacios", mismoTelefono("+54 9 351 000-0000", "5493510000000"), true);
+check("titular: otro número", mismoTelefono("5493510000001", "5493510000000"), false);
+check("titular: teléfono vacío nunca coincide", mismoTelefono("", ""), false);
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);
