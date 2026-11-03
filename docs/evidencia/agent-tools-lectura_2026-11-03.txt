@@ -1,0 +1,26 @@
+
+─── Smoke test de herramientas ───────────────────
+Hotel: Hotel Roomly (cmpok9uww0000lsmvaz9dyryw)
+Modo lectura.
+
+✓ consultar_habitaciones con fechas válidas — consultar_habitaciones (482ms)
+    {"rooms":[{"id":"cmpok9uy00001lsmvpsr4di3h","number":"101","floor":1,"status":"AVAILABLE","type":{"name":"Standard","maxGuests":2,"amenities":["WiFi","AC","TV","Baño privado"]},"pricePerNight":15000,"ratePlanName":"Tarifa base Standard"},{"id":"cmpok9uyc0002ls
+✓ consultar_habitaciones rechaza checkOut anterior — consultar_habitaciones (0ms)
+    {"error":"checkOut debe ser posterior a checkIn."}
+✓ consultar_habitaciones rechaza fechas faltantes — consultar_habitaciones (0ms)
+    {"error":"checkIn y checkOut son obligatorios (formato YYYY-MM-DD)."}
+✓ consultar_reserva con código inexistente — consultar_reserva (69ms)
+    {"error":"No existe ninguna reserva con el código RML-0000 para este número."}
+✓ consultar_reserva de otro teléfono (RML-1820) responde como inexistente — consultar_reserva (461ms)
+    {"error":"No existe ninguna reserva con el código RML-1820 para este número."}
+✓ crear_reserva con más personas que la capacidad (hab. 101, hasta 2) — crear_reserva (506ms)
+    {"error":"La habitación admite hasta 2 personas y la reserva es para 5."}
+✓ crear_reserva con ingreso en el pasado — crear_reserva (459ms)
+    {"error":"La fecha de ingreso (2026-10-31) ya pasó: hoy es 2026-11-03."}
+✓ modificar_reserva sin campos a cambiar — modificar_reserva (61ms)
+    {"error":"No existe ninguna reserva con ese id para este número."}
+✓ herramienta inexistente — no_existe (0ms)
+    {"error":"Herramienta desconocida: no_existe"}
+
+Todo OK
+

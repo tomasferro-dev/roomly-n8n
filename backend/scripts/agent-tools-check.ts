@@ -116,12 +116,39 @@ async function main() {
     select: { code: true },
   });
   if (alguna) {
+    // El teléfono de prueba no es el titular: tiene que responder igual que
+    // ante un código inexistente (control de titularidad).
     await probar(
-      `consultar_reserva con un código real (${alguna.code})`,
+      `consultar_reserva de otro teléfono (${alguna.code}) responde como inexistente`,
       "consultar_reserva",
-      { code: alguna.code.toLowerCase() }, // en minúscula: el handler normaliza
+      { code: alguna.code.toLowerCase() },
       ctx,
-      "ok"
+      "error"
+    );
+  }
+
+  // Reglas del hotel: se rechazan antes de escribir nada.
+  const conCapacidad = await prisma.room.findFirst({
+    where: { hotelId },
+    orderBy: { number: "asc" },
+    select: { id: true, number: true, type: { select: { maxGuests: true } } },
+  });
+  if (conCapacidad) {
+    await probar(
+      `crear_reserva con más personas que la capacidad (hab. ${conCapacidad.number}, hasta ${conCapacidad.type.maxGuests})`,
+      "crear_reserva",
+      { roomId: conCapacidad.id, guestName: "Prueba Agente", checkIn, checkOut,
+        numGuests: conCapacidad.type.maxGuests + 3, paymentType: "DEPOSIT" },
+      ctx,
+      "error"
+    );
+    await probar(
+      "crear_reserva con ingreso en el pasado",
+      "crear_reserva",
+      { roomId: conCapacidad.id, guestName: "Prueba Agente", checkIn: dia(-3), checkOut: dia(-1),
+        numGuests: 1, paymentType: "DEPOSIT" },
+      ctx,
+      "error"
     );
   }
 
@@ -206,9 +233,16 @@ async function main() {
           await probar(
             "modificar_reserva cambia numGuests",
             "modificar_reserva",
-            { id: detalle.id, numGuests: 3 },
+            { id: detalle.id, numGuests: 1 },
             ctx,
             "ok"
+          );
+          await probar(
+            "modificar_reserva por encima de la capacidad falla",
+            "modificar_reserva",
+            { id: detalle.id, numGuests: 9 },
+            ctx,
+            "error"
           );
           await probar(
             "cancelar_reserva",
