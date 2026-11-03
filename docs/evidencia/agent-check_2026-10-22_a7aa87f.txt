@@ -1,0 +1,89 @@
+Ejecucion: 2026-10-22 13:09:59 -0300
+Commit: a7aa87f (master, fork tomasferro-dev/roomly-n8n)
+Node: v24.21.0
+Comando: npm run agent:check (sin base de datos ni API key)
+
+
+> backend@0.1.0 agent:check
+> tsx scripts/agent-check.ts
+
+✓ 22:30 ARG del 15-sep (01:30 UTC del 16)
+    esperado: "2026-09-15T22:30:00-03:00"
+    obtenido: "2026-09-15T22:30:00-03:00"
+✓ medianoche ARG
+    esperado: "2026-09-16T00:00:00-03:00"
+    obtenido: "2026-09-16T00:00:00-03:00"
+✓ mediodia ARG
+    esperado: "2026-09-15T12:00:00-03:00"
+    obtenido: "2026-09-15T12:00:00-03:00"
+✓ UTC devuelve +00:00
+    esperado: "2026-09-15T15:00:00+00:00"
+    obtenido: "2026-09-15T15:00:00+00:00"
+✓ Madrid en verano (+02:00)
+    esperado: "2026-07-15T12:00:00+02:00"
+    obtenido: "2026-07-15T12:00:00+02:00"
+✓ round-trip a UTC
+    esperado: "2026-09-16T01:30:00.000Z"
+    obtenido: "2026-09-16T01:30:00.000Z"
+✓ no quedan placeholders sin resolver
+    esperado: false
+    obtenido: false
+✓ interpola el telefono
+    esperado: true
+    obtenido: true
+✓ interpola la fecha local
+    esperado: true
+    obtenido: true
+✓ conserva las reglas del prompt de n8n
+    esperado: true
+    obtenido: true
+✓ el prompt prohibe el doble asterisco
+    esperado: true
+    obtenido: true
+✓ el prompt da el ejemplo de lista sin viñetas
+    esperado: true
+    obtenido: true
+✓ descarta turnos del modelo al inicio
+    esperado: ["user","model"]
+    obtenido: ["user","model"]
+✓ deja intacto un historial que ya abre en user
+    esperado: ["user","model"]
+    obtenido: ["user","model"]
+✓ historial todo-modelo queda vacio
+    esperado: []
+    obtenido: []
+✓ historial vacio
+    esperado: []
+    obtenido: []
+✓ extrae un mensaje de texto
+    esperado: {"messageId":"wamid.ABC","phoneNumberId":"123456789","from":"5493510000000","text":"hola","timestamp":"1755880000"}
+    obtenido: {"messageId":"wamid.ABC","phoneNumberId":"123456789","from":"5493510000000","text":"hola","timestamp":"1755880000"}
+✓ acepta el payload envuelto en body
+    esperado: "hola"
+    obtenido: "hola"
+✓ ignora los avisos de estado (statuses)
+    esperado: null
+    obtenido: null
+✓ ignora mensajes que no son texto (audio, imagen)
+    esperado: null
+    obtenido: null
+✓ ignora un texto vacio
+    esperado: null
+    obtenido: null
+✓ tolera un payload sin forma conocida
+    esperado: null
+    obtenido: null
+✓ tolera null
+    esperado: null
+    obtenido: null
+✓ saca el 9 de los moviles argentinos
+    esperado: "543510000000"
+    obtenido: "543510000000"
+✓ no toca un fijo argentino
+    esperado: "543510000000"
+    obtenido: "543510000000"
+✓ no toca numeros de otros paises
+    esperado: "341112345678"
+    obtenido: "341112345678"
+
+Todo OK

@@ -1,0 +1,14 @@
+Verificación de la firma X-Hub-Signature-256 en producción — 27/10/2026
+POST https://roomly.com.ar/api/whatsapp/webhook
+Cuerpo: {"object":"whatsapp_business_account","entry":[]}
+
+Antes de cargar WHATSAPP_APP_SECRET en el proyecto de Vercel correcto:
+  firma falsa (sha256=000…0) -> 200
+  sin firma                   -> 200
+
+Después de cargarla (solo Production) y redesplegar:
+  firma falsa (sha256=000…0) -> 401
+  sin firma                   -> 401
+
+No verificado: aceptación de un mensaje real de WhatsApp con firma válida
+(el número del bot no estaba disponible ese día).

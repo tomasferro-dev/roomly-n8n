@@ -1,0 +1,57 @@
+{
+  "ejecutado": "2026-10-27T20:51:25.642Z",
+  "commit": "fix/titularidad-reservas (sin commit)",
+  "reserva": "RML-2400",
+  "ajeno": {
+    "consultar": {
+      "ok": false,
+      "resultado": {
+        "error": "No existe ninguna reserva con el código RML-2400 para este número."
+      }
+    },
+    "modificar": {
+      "ok": false,
+      "resultado": {
+        "error": "No existe ninguna reserva con ese id para este número."
+      }
+    },
+    "cancelar": {
+      "ok": false,
+      "resultado": {
+        "error": "No existe ninguna reserva con ese id para este número."
+      }
+    },
+    "reserva_despues": {
+      "status": "CONFIRMED",
+      "numGuests": 2
+    }
+  },
+  "titular": {
+    "consultar_ok": true,
+    "devuelve_telefono": false,
+    "consultar_con_otro_formato_ok": true,
+    "modificar": {
+      "ok": true,
+      "resultado": {
+        "id": "cmvr5utc90001zwuo974he1f5",
+        "code": "RML-2400",
+        "status": "CONFIRMED",
+        "room": "202",
+        "checkIn": "2029-01-04",
+        "checkOut": "2029-01-06",
+        "numGuests": 1
+      }
+    },
+    "cancelar_ok": true,
+    "reserva_despues": {
+      "status": "CANCELLED",
+      "numGuests": 1
+    }
+  },
+  "codigo_inexistente": {
+    "ok": false,
+    "resultado": {
+      "error": "No existe ninguna reserva con el código RML-0000X para este número."
+    }
+  }
+}

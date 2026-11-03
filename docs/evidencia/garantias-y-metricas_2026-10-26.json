@@ -1,0 +1,88 @@
+{
+  "ejecutado": "2026-10-26T20:01:11.355Z",
+  "rango": [
+    {
+      "ejecuciones": 61,
+      "desde": "2026-08-26T18:18:56.859Z",
+      "hasta": "2026-10-23T00:24:38.192Z"
+    }
+  ],
+  "estados_por_modelo": [
+    {
+      "model": "gemini-3.1-flash-lite",
+      "status": "OK",
+      "n": 54
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "status": "FAILED",
+      "n": 7
+    }
+  ],
+  "latencia_ok": [
+    {
+      "n": 54,
+      "mediana_ms": "3343",
+      "p95_ms": "27580",
+      "bajo_10s": 46
+    }
+  ],
+  "errores": [
+    {
+      "error": "{\"error\":{\"code\":404,\"message\":\"This model models/gemini-2.5-flash-lite is no longer avail",
+      "n": 5
+    },
+    {
+      "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes i",
+      "n": 2
+    }
+  ],
+  "crear_reserva": [
+    {
+      "llamadas": 7,
+      "devueltas_por_idempotencia": 0,
+      "con_error": 1
+    }
+  ],
+  "llamadas_repetidas_en_un_turno": [
+    {
+      "ejecuciones_con_repetidas": 0
+    }
+  ],
+  "solapamientos_activos": [
+    {
+      "pares_solapados": 0
+    }
+  ],
+  "reservas": [
+    {
+      "status": "CANCELLED",
+      "n": 18
+    },
+    {
+      "status": "CONFIRMED",
+      "n": 10
+    }
+  ],
+  "pagos": [
+    {
+      "status": "EXPIRED",
+      "n": 11
+    },
+    {
+      "status": "APPROVED",
+      "n": 5
+    }
+  ],
+  "telefonos": [
+    {
+      "telefonos_en_message": 2
+    }
+  ],
+  "agentrun_seudonimizados": [
+    {
+      "seudonimizados": 1,
+      "total": 61
+    }
+  ]
+}

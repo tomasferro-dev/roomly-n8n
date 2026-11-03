@@ -1,0 +1,99 @@
+{
+  "ejecutado": "2026-10-26T22:45:16.992Z",
+  "base": "ep-long-feather-ac93kpqh",
+  "hotel": "cmpok9uww0000lsmvaz9dyryw",
+  "A_concurrencia": {
+    "solicitudes_simultaneas": 10,
+    "habitacion": "101",
+    "checkIn": "2028-06-17",
+    "checkOut": "2028-06-19",
+    "exitos": 1,
+    "rechazos": {
+      "rechazo por la restricción de exclusión": 9
+    },
+    "reservas_activas_resultantes": 1,
+    "duracion_ms": 1380
+  },
+  "B1_repeticion_secuencial": {
+    "habitacion": "102",
+    "primera": {
+      "ok": true,
+      "code": "RML-0783"
+    },
+    "segunda": {
+      "ok": true,
+      "code": "RML-0783",
+      "yaExistia": true
+    },
+    "misma_reserva": true,
+    "reservas_activas_resultantes": 1
+  },
+  "B2_repeticion_concurrente": {
+    "llamadas_simultaneas": 5,
+    "habitacion": "103",
+    "exitosas": 1,
+    "codigos_distintos": 1,
+    "errores": {
+      "No se pudo completar la operación.": 4
+    },
+    "reservas_activas_resultantes": 1
+  },
+  "B2_detalle_de_causas": {
+    "ejecutado": "2026-10-26T22:46:05.053Z",
+    "huesped_nuevo": {
+      "llamadas": 5,
+      "exitosas": 1,
+      "codigos_distintos": 1,
+      "causas_de_error": {
+        "P2002 en Guest (alta concurrente del huésped)": 1,
+        "restricción de exclusión": 3
+      },
+      "reservas_activas": 1
+    },
+    "huesped_existente": {
+      "llamadas": 5,
+      "exitosas": 1,
+      "codigos_distintos": 1,
+      "causas_de_error": {
+        "restricción de exclusión": 4
+      },
+      "reservas_activas": 1
+    }
+  },
+  "correccion_alta_huesped": {
+    "ejecutado": "2026-10-26T22:59:52.068Z",
+    "commit": "fix/alta-concurrente-huesped (sin commit)",
+    "alta_concurrente_mismo_huesped": {
+      "altas_simultaneas": 10,
+      "exitosas": 10,
+      "errores": {},
+      "huespedes_con_ese_telefono": 1
+    },
+    "crear_reserva_concurrente_huesped_nuevo": {
+      "llamadas": 5,
+      "exitosas": 1,
+      "causas_de_error": {
+        "restricción de exclusión": 4
+      },
+      "reservas_activas": 1
+    }
+  },
+  "antes_de_la_correccion": {
+    "ejecutado": "2026-10-26T23:00:29.166Z",
+    "commit": "c67ed18 (sin la correccion)",
+    "alta_concurrente_mismo_huesped": {
+      "altas_simultaneas": 10,
+      "exitosas": 10,
+      "errores": {},
+      "huespedes_con_ese_telefono": 1
+    },
+    "crear_reserva_concurrente_huesped_nuevo": {
+      "llamadas": 5,
+      "exitosas": 1,
+      "causas_de_error": {
+        "P2002 en Guest": 4
+      },
+      "reservas_activas": 1
+    }
+  }
+}

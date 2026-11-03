@@ -1,0 +1,167 @@
+{
+  "ejecutado": "2026-10-22T16:08:38.875Z",
+  "rango": [
+    {
+      "ejecuciones": 51,
+      "desde": "2026-08-26T18:18:56.859Z",
+      "hasta": "2026-10-22T02:02:42.633Z"
+    }
+  ],
+  "estados": [
+    {
+      "status": "OK",
+      "n": 49
+    },
+    {
+      "status": "FAILED",
+      "n": 2
+    }
+  ],
+  "modelos": [
+    {
+      "model": "gemini-3.1-flash-lite",
+      "n": 51
+    }
+  ],
+  "latencia_ok": [
+    {
+      "n": 49,
+      "mediana_ms": "3180",
+      "p90_ms": "8841",
+      "p95_ms": "11065",
+      "min_ms": 691,
+      "max_ms": 16920,
+      "iter_prom": "1.49",
+      "tokens_entrada_prom": "3964",
+      "tokens_salida_prom": "98"
+    }
+  ],
+  "latencia_por_iter": [
+    {
+      "iterations": 1,
+      "n": 25,
+      "mediana_ms": "1072",
+      "p95_ms": "7132"
+    },
+    {
+      "iterations": 2,
+      "n": 24,
+      "mediana_ms": "4757",
+      "p95_ms": "14132"
+    }
+  ],
+  "menos_10s": [
+    {
+      "bajo_10s": 46,
+      "total": 49
+    }
+  ],
+  "herramientas": [
+    {
+      "herramienta": "consultar_reserva",
+      "llamadas": 11,
+      "mediana_ms": "947",
+      "p95_ms": "1232",
+      "con_error": 0
+    },
+    {
+      "herramienta": "consultar_habitaciones",
+      "llamadas": 9,
+      "mediana_ms": "480",
+      "p95_ms": "916",
+      "con_error": 0
+    },
+    {
+      "herramienta": "crear_reserva",
+      "llamadas": 5,
+      "mediana_ms": "4327",
+      "p95_ms": "4916",
+      "con_error": 0
+    }
+  ],
+  "modelo_turno": [
+    {
+      "turnos": 74,
+      "mediana_ms": "1044",
+      "p95_ms": "6429"
+    }
+  ],
+  "fallos": [
+    {
+      "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand",
+      "n": 2
+    }
+  ],
+  "reservas": [
+    {
+      "status": "CANCELLED",
+      "n": 15
+    },
+    {
+      "status": "CONFIRMED",
+      "n": 10
+    },
+    {
+      "status": "PENDING_PAYMENT",
+      "n": 1
+    }
+  ],
+  "reservas_cal": [
+    {
+      "total": 26,
+      "con_evento": 26
+    }
+  ],
+  "pagos": [
+    {
+      "status": "PENDING",
+      "paymentType": "DEPOSIT",
+      "n": 1
+    },
+    {
+      "status": "APPROVED",
+      "paymentType": "DEPOSIT",
+      "n": 3
+    },
+    {
+      "status": "APPROVED",
+      "paymentType": "FULL",
+      "n": 1
+    },
+    {
+      "status": "EXPIRED",
+      "paymentType": "DEPOSIT",
+      "n": 8
+    },
+    {
+      "status": "EXPIRED",
+      "paymentType": "FULL",
+      "n": 1
+    }
+  ],
+  "mensajes": [
+    {
+      "direction": "OUTBOUND",
+      "n": 86
+    },
+    {
+      "direction": "INBOUND",
+      "n": 86
+    }
+  ],
+  "telefonos_distintos": [
+    {
+      "telefonos": 2
+    }
+  ],
+  "dedup": [
+    {
+      "provider": "SWEEP",
+      "n": 3
+    },
+    {
+      "provider": "WHATSAPP",
+      "n": 6
+    }
+  ]
+}

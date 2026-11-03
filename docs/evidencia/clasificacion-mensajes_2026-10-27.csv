@@ -1,0 +1,63 @@
+﻿n;fecha;arquitectura;mensaje_huesped;interpretacion_agente;correcto
+1;11/06/2026;B;Hola quiero hacer una reserva;"Reservar; pide fechas y personas";si
+2;11/06/2026;B;[nombre], 12 de diciembre al 16 de diciembre y seriamos 3 personas;"12/12 a 16/12, 3 personas; ofrece solo suites por capacidad";si
+3;11/06/2026;B;La suite 302;"Hab. 302; crea la reserva con seña sin preguntar la modalidad de pago";no
+4;11/06/2026;B;ya pague;"Aviso de pago; consulta y confirma";si
+5;11/06/2026;B;hola quiero una nueva reserva;Reservar;si
+6;11/06/2026;B;[nombre], 2 de enero 2027 al 6 de enero del 2027. Somos dos;02/01/2027 a 06/01/2027, 2 personas, 4 noches;si
+7;11/06/2026;B;la 101;"Hab. 101; pregunta seña o total";si
+8;11/06/2026;B;la seña;"Seña; la herramienta falla (409) y lo informa";si
+9;11/06/2026;B;proa de nuevo;"Error de tipeo («probá»); reintenta";si
+10;11/06/2026;B;proba con la 102;"Hab. 102; crea la reserva";si
+11;11/06/2026;B;ya pague;"Aviso de pago; informa que no figura acreditado";si
+12;02/07/2026;B;hola, quiero hacer una reserva;"Reservar; pide nombre, fechas y personas";si
+13;02/07/2026;B;Mi nombre es [nombre], quiero ir del 10 al 15 de agosto;"10/08 a 15/08; pregunta la cantidad de personas";si
+14;02/07/2026;B;vamos a ser solo 2 personas;2 personas, 5 noches;si
+15;02/07/2026;B;cualquiera standard;Asigna una Standard (101);si
+16;02/07/2026;B;quiero pagar la seña;"Seña del 15 %; crea la reserva";si
+17;02/07/2026;B;listo;"Aviso de pago; confirma";si
+18;02/07/2026;B;hola quisiera modificar una reserva;"Modificar; pide el código";si
+19;02/07/2026;B;RML-2673;Consulta la reserva;si
+20;02/07/2026;B;quiero modificar las fechas, del 10 al 17 de agosto;"Nuevo egreso 17/08; modifica";si
+21;02/07/2026;B;no, eso es todo;Cierre;si
+22;02/07/2026;B;hola, quisiera cancelar una reserva;"Cancelar; pide el código";si
+23;02/07/2026;B;RML-2673;Consulta y pide confirmación explícita;si
+24;02/07/2026;B;si;"Confirmación; cancela";si
+25;26/08/2026;C;Holaa;"Saludo; ofrece reservar o consultar";si
+26;26/08/2026;C;hola, quiero hacer una reserva;Reservar;si
+27;26/08/2026;C;nombre [nombre], desde el 30/8 al 3/9, somos 2 personas;30/08 a 03/09 (4 noches), 2 personas;si
+28;26/08/2026;C;vamos con la 101;"Hab. 101; pregunta seña o total";si
+29;26/08/2026;C;vamos con la seña;"Seña; crea la reserva";si
+30;26/08/2026;C;pago realizado;"Aviso de pago; informa que no figura acreditado";si
+31;26/08/2026;C;ahora? (cinco veces);"Pregunta por el pago; vuelve a consultar";si
+32;26/08/2026;C;hola, quiero realizar una reserva;Reservar;si
+33;26/08/2026;C;perdon, me equivoque de numero;Cierra sin crear nada;si
+34;26/08/2026;C;hola hola;Saludo;si
+35;26/08/2026;C;si quiero hacer una reserva por favor;Reservar;si
+36;26/08/2026;C;me llamo [nombre], voy del 1 de septiembre al 5;"01/09 a 05/09; pregunta la cantidad de personas";si
+37;26/08/2026;C;soy yo solo, full soltero, dame la 102;"1 persona, Hab. 102; crea la reserva con pago total sin preguntar la modalidad";no
+38;26/08/2026;C;Holaa;"Saludo; pregunta por el pago pendiente";si
+39;26/08/2026;C;Si;"Aviso de pago; confirma";si
+40;30/08/2026;C;Hola;Saludo;si
+41;30/08/2026;C;Quiero hacer una reserva;Reservar;si
+42;30/08/2026;C;[nombre] del 30/9 al 2/10 2 personas;30/09 a 02/10, 2 personas;si
+43;30/08/2026;C;La 101;"Hab. 101; pregunta modalidad y email opcional";si
+44;31/08/2026;C;Pago la seña;"Seña; pide el email";si
+45;31/08/2026;C;[email];"Registra el email; crea la reserva";si
+46;31/08/2026;C;ya esta el pago;"Aviso de pago; confirma";si
+47;02/09/2026;C;Hola;Saludo;si
+48;02/09/2026;C;Quiero hacer una reserva;Reservar;si
+49;02/09/2026;C;Me llamo [nombre];"Nombre; pide los datos faltantes";si
+50;02/09/2026;C;Para mañana por favor;Ingreso 03/09 (fecha relativa);si
+51;02/09/2026;C;Para el viernes;Egreso 04/09 (fecha relativa);si
+52;02/09/2026;C;No para el lunes mejor;Corrige el egreso a 07/09;si
+53;02/09/2026;C;2 personas;03/09 a 07/09, 2 personas;si
+54;21/10/2026;C;hola, quiero hacer una reserva!;Reservar;si
+55;21/10/2026;C;nombre [nombre], desde el 22 de octubre al 25 de octubre somos 2 personas;22/10 a 25/10, 2 personas;si
+56;21/10/2026;C;cualquiera standar;"Error de tipeo; Standard";si
+57;21/10/2026;C;la seña, [email];"Seña y email en un mismo mensaje; crea la reserva";si
+58;22/10/2026;C;ya pague;"Aviso de pago; informa que no figura acreditado";si
+59;22/10/2026;C;hola, quiero hacer una reserva;Reservar;si
+60;22/10/2026;C;[nombre], 25 de octubre al 27 somos 2 personas;25/10 a 27/10, 2 personas;si
+61;22/10/2026;C;cualquiera standard;Standard;si
+62;22/10/2026;C;mi email es [email] y quiero pagar la seña;"Email y seña; explica el límite de reservas pendientes";si
