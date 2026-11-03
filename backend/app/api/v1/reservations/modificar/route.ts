@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UpdateReservationSchema } from "@/lib/validations";
-import { updateReservation } from "@/services/reservation.service";
+import { updateReservation, ReglaDeReservaError } from "@/services/reservation.service";
 
 /**
  * GET /api/v1/reservations/modificar?id=xxx[&checkIn=YYYY-MM-DD][&checkOut=YYYY-MM-DD][&numGuests=N]
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(updated);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    const status  = message.includes("not available") ? 409 : 500;
+    const status  = message.includes("not available") ? 409 : err instanceof ReglaDeReservaError ? 422 : 500;
     console.error("[GET /reservations/modificar]", err);
     return NextResponse.json({ error: message }, { status });
   }

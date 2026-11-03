@@ -4,6 +4,7 @@ import {
   findReservationByCode,
   updateReservation,
   cancelReservation,
+  ReglaDeReservaError,
 } from "@/services/reservation.service";
 import { prisma } from "@/lib/prisma";
 
@@ -65,7 +66,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json(updated);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    const status = message.includes("not available") ? 409 : 500;
+    const status = message.includes("not available") ? 409 : err instanceof ReglaDeReservaError ? 422 : 500;
     console.error("[PATCH /reservations/:id]", err);
     return NextResponse.json({ error: message }, { status });
   }

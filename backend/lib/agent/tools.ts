@@ -27,6 +27,7 @@ import {
   updateReservation,
   cancelReservation,
   findReservationByCode,
+  ReglaDeReservaError,
 } from "@/services/reservation.service";
 import { createPaymentPreference, reconciliarPago } from "@/services/payment.service";
 import { CreateReservationSchema, UpdateReservationSchema } from "@/lib/validations";
@@ -248,11 +249,9 @@ async function buscarReservaPendiente(
 
 /**
  * Máximo de reservas impagas y vigentes que puede tener un mismo teléfono.
- *
- * TEMPORAL: en 100 mientras se prueba con pocos números de la lista blanca.
- * Antes de abrir el bot al público, volver a un valor bajo (2).
+ * Evita que un solo número bloquee el inventario con reservas que no paga.
  */
-export const MAX_PENDIENTES_POR_TELEFONO = 100;
+export const MAX_PENDIENTES_POR_TELEFONO = 2;
 
 /**
  * Reservas PENDING_PAYMENT del teléfono que todavía bloquean una habitación:
@@ -500,6 +499,11 @@ export async function executeTool(
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[agent:tool:${name}]`, err);
+
+    // Las reglas del hotel ya vienen en castellano y sin detalles internos.
+    if (err instanceof ReglaDeReservaError) {
+      return { result: { error: message }, ok: false };
+    }
 
     // Traducir los errores conocidos de los services a algo que el modelo
     // pueda transmitir sin filtrar detalles internos.

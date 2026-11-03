@@ -17,6 +17,8 @@ import { verifyMetaSignature, verifyMercadoPagoSignature } from "../lib/signatur
 import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "../lib/privacy";
 import { accionTrasReconciliar } from "../services/payment.service";
 import { mismoTelefono } from "../lib/agent/tools";
+import { violacionDeReglas } from "../services/reservation.service";
+import { mismoSecreto } from "../lib/compare";
 
 const TZ = "America/Argentina/Buenos_Aires";
 let fail = 0;
@@ -200,6 +202,26 @@ check("pago ya no pendiente → no hace nada", accionTrasReconciliar("NO_APLICA"
 check("titular: mismo número con + y espacios", mismoTelefono("+54 9 351 000-0000", "5493510000000"), true);
 check("titular: otro número", mismoTelefono("5493510000001", "5493510000000"), false);
 check("titular: teléfono vacío nunca coincide", mismoTelefono("", ""), false);
+
+// ─── Reglas del hotel: no dependen del modelo ────────────────────────────────
+
+const base = { checkIn: "2026-12-10", checkOut: "2026-12-12", numGuests: 2, maxGuests: 2, minNights: 1, hoy: "2026-11-03", validarIngreso: true };
+check("reglas: reserva válida", violacionDeReglas(base), null);
+check("reglas: más personas que la capacidad",
+  violacionDeReglas({ ...base, numGuests: 5 }), "La habitación admite hasta 2 personas y la reserva es para 5.");
+check("reglas: por debajo de la estadía mínima",
+  violacionDeReglas({ ...base, minNights: 3 }), "La estadía mínima para esta habitación es de 3 noches.");
+check("reglas: ingreso en el pasado (p. ej. «el viernes» mal resuelto)",
+  violacionDeReglas({ ...base, checkIn: "2026-10-30", checkOut: "2026-11-01" }), "La fecha de ingreso (2026-10-30) ya pasó: hoy es 2026-11-03.");
+check("reglas: ingreso hoy se acepta", violacionDeReglas({ ...base, checkIn: "2026-11-03", checkOut: "2026-11-04" }), null);
+check("reglas: huésped alojado extiende la salida",
+  violacionDeReglas({ ...base, checkIn: "2026-11-01", checkOut: "2026-11-06", validarIngreso: false }), null);
+
+// ─── Secreto de la API ───────────────────────────────────────────────────────
+
+check("secreto: igual", mismoSecreto("abc123", "abc123"), true);
+check("secreto: distinto", mismoSecreto("abc124", "abc123"), false);
+check("secreto: sin configurar nunca coincide", mismoSecreto("", ""), false);
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);

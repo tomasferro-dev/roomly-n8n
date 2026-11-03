@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { mismoSecreto } from "@/lib/compare";
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
@@ -21,7 +22,7 @@ export default auth((req) => {
   // que ya no está en uso (ver docs/legacy/).
   if (isApiProtected && !isLoggedIn) {
     const secret = req.headers.get("x-n8n-secret");
-    if (!secret || secret !== process.env.N8N_WEBHOOK_SECRET) {
+    if (!secret || !mismoSecreto(secret, process.env.N8N_WEBHOOK_SECRET ?? "")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   }

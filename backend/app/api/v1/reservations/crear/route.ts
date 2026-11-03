@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { CreateReservationSchema } from "@/lib/validations";
-import { createReservation } from "@/services/reservation.service";
+import { createReservation, ReglaDeReservaError } from "@/services/reservation.service";
 import { createPaymentPreference } from "@/services/payment.service";
 import { prisma } from "@/lib/prisma";
 
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(reservation, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    const status = message.includes("not available") ? 409 : 500;
+    const status = message.includes("not available") ? 409 : err instanceof ReglaDeReservaError ? 422 : 500;
     console.error("[GET /reservations/crear]", err);
     return NextResponse.json({ error: message }, { status });
   }

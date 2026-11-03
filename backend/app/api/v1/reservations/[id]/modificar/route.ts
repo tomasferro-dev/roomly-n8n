@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { UpdateReservationSchema } from "@/lib/validations";
-import { updateReservation } from "@/services/reservation.service";
+import { updateReservation, ReglaDeReservaError } from "@/services/reservation.service";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     return NextResponse.json(updated);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    const status  = message.includes("not available") ? 409 : 500;
+    const status  = message.includes("not available") ? 409 : err instanceof ReglaDeReservaError ? 422 : 500;
     console.error("[GET /reservations/:id/modificar]", err);
     return NextResponse.json({ error: message }, { status });
   }

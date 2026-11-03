@@ -34,6 +34,93 @@ export async function scheduleHousekeeping(reservationId: string): Promise<void>
   }
 }
 
+// ─── Reglas del dominio ────────────────────────────────────────────────────────
+
+/**
+ * Una reserva que viola una regla del hotel. Se distingue de los errores
+ * internos para que la API responda 422 y el agente pueda explicarle al
+ * huésped qué cambiar.
+ */
+export class ReglaDeReservaError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ReglaDeReservaError";
+  }
+}
+
+/** Fecha de hoy (YYYY-MM-DD) en la zona horaria del hotel, no en UTC. */
+function hoyEnZona(timezone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/**
+ * Capacidad, estadía mínima y fecha de ingreso no pasada.
+ *
+ * Antes dependían de que el modelo leyera la capacidad en consultar_habitaciones
+ * y calculara bien las fechas relativas; son exactamente el tipo de error que
+ * el modelo puede cometer, así que se verifican acá, igual que la
+ * disponibilidad. Es una función pura para poder probarla sin base.
+ *
+ * `validarIngreso` es false cuando se modifica una reserva sin cambiar su
+ * ingreso: un huésped ya alojado tiene que poder extender su salida.
+ */
+export function violacionDeReglas(r: {
+  checkIn: string;
+  checkOut: string;
+  numGuests: number;
+  maxGuests: number;
+  minNights: number;
+  hoy: string;
+  validarIngreso: boolean;
+}): string | null {
+  if (r.numGuests > r.maxGuests) {
+    return `La habitación admite hasta ${r.maxGuests} personas y la reserva es para ${r.numGuests}.`;
+  }
+  const noches = Math.round(
+    (new Date(r.checkOut).getTime() - new Date(r.checkIn).getTime()) / 86400000
+  );
+  if (noches < r.minNights) {
+    return `La estadía mínima para esta habitación es de ${r.minNights} noches.`;
+  }
+  if (r.validarIngreso && r.checkIn < r.hoy) {
+    return `La fecha de ingreso (${r.checkIn}) ya pasó: hoy es ${r.hoy}.`;
+  }
+  return null;
+}
+
+/**
+ * Datos de la habitación que necesitan las reglas. La estadía mínima sale del
+ * plan de tarifa de la reserva o, si no tiene, del plan vigente del tipo: el
+ * mismo criterio con que se calcula el precio en payment.service.
+ */
+async function reglasDeHabitacion(roomId: string, ratePlanId?: string | null) {
+  const room = await prisma.room.findUniqueOrThrow({
+    where: { id: roomId },
+    select: {
+      typeId: true,
+      type: { select: { maxGuests: true } },
+      hotel: { select: { timezone: true } },
+    },
+  });
+  const plan = ratePlanId
+    ? await prisma.ratePlan.findUnique({ where: { id: ratePlanId }, select: { minNights: true } })
+    : await prisma.ratePlan.findFirst({
+        where: { typeId: room.typeId },
+        orderBy: { validFrom: "desc" },
+        select: { minNights: true },
+      });
+  return {
+    maxGuests: room.type.maxGuests,
+    minNights: plan?.minNights ?? 1,
+    hoy: hoyEnZona(room.hotel.timezone),
+  };
+}
+
 // ─── Code generator ────────────────────────────────────────────────────────────
 
 function generateRmlCode(): string {
@@ -68,6 +155,11 @@ export async function createReservation(input: CreateReservationInput) {
     phone: input.guestPhone!,
     email: input.guestEmail,
   };
+
+  // 0. Reglas del hotel: capacidad, estadía mínima e ingreso no pasado.
+  const reglas = await reglasDeHabitacion(roomId, ratePlanId);
+  const violacion = violacionDeReglas({ checkIn, checkOut, numGuests, ...reglas, validarIngreso: true });
+  if (violacion) throw new ReglaDeReservaError(violacion);
 
   // 1. Check availability (application-level guard; DB constraint is the final safety net)
   const available = await isRoomAvailable(roomId, checkIn, checkOut);
@@ -189,11 +281,27 @@ export async function updateReservation(
     where: { id },
   });
 
+  const newRoomId = input.roomId ?? current.roomId;
+  const currentCheckIn = current.checkIn.toISOString().split("T")[0];
+  const newCheckIn = input.checkIn ?? currentCheckIn;
+  const newCheckOut = input.checkOut ?? current.checkOut.toISOString().split("T")[0];
+
+  // Reglas del hotel sobre el resultado del cambio, no sólo sobre los campos
+  // nuevos: bajar la salida puede dejar la estadía por debajo del mínimo.
+  if (input.checkIn || input.checkOut || input.roomId || input.numGuests !== undefined) {
+    const reglas = await reglasDeHabitacion(newRoomId, current.ratePlanId);
+    const violacion = violacionDeReglas({
+      checkIn: newCheckIn,
+      checkOut: newCheckOut,
+      numGuests: input.numGuests ?? current.numGuests,
+      ...reglas,
+      validarIngreso: newCheckIn !== currentCheckIn,
+    });
+    if (violacion) throw new ReglaDeReservaError(violacion);
+  }
+
   // If dates are changing, check availability
   if (input.checkIn || input.checkOut || input.roomId) {
-    const newRoomId = input.roomId ?? current.roomId;
-    const newCheckIn = input.checkIn ?? current.checkIn.toISOString().split("T")[0];
-    const newCheckOut = input.checkOut ?? current.checkOut.toISOString().split("T")[0];
 
     const available = await isRoomAvailable(newRoomId, newCheckIn, newCheckOut, id);
     if (!available) {

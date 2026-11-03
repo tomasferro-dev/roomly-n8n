@@ -4,6 +4,7 @@ import {
   createReservation,
   listReservations,
   findReservationByCode,
+  ReglaDeReservaError,
 } from "@/services/reservation.service";
 
 /**
@@ -72,7 +73,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(reservation, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    const status = message.includes("not available") ? 409 : 500;
+    const status = message.includes("not available") ? 409 : err instanceof ReglaDeReservaError ? 422 : 500;
     console.error("[POST /reservations]", err);
     return NextResponse.json({ error: message }, { status });
   }
