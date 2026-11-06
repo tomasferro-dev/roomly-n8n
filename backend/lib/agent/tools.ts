@@ -27,6 +27,7 @@ import {
   updateReservation,
   cancelReservation,
   findReservationByCode,
+  hoyEnZona,
   ReglaDeReservaError,
 } from "@/services/reservation.service";
 import { createPaymentPreference, reconciliarPago } from "@/services/payment.service";
@@ -283,6 +284,14 @@ const handlers: Record<string, ToolHandler> = {
     }
     if (new Date(checkOut) <= new Date(checkIn)) {
       return { error: "checkOut debe ser posterior a checkIn." };
+    }
+
+    // crear_reserva ya rechaza un ingreso pasado, pero si la consulta lo
+    // aceptaba el modelo le confirmaba disponibilidad al huésped y recién
+    // fallaba al reservar. Se corta acá con el mismo criterio de fecha.
+    const hoy = hoyEnZona(ctx.timezone);
+    if (checkIn < hoy) {
+      return { error: `La fecha de ingreso (${checkIn}) ya pasó: hoy es ${hoy}. Pedile al huésped una fecha desde hoy.` };
     }
 
     const rooms = await getAvailableRooms(ctx.hotelId, checkIn, checkOut);
