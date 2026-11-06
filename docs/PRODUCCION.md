@@ -104,7 +104,7 @@ mensaje de prueba y revisar que aparezca un `AgentRun` nuevo.
 
 Ninguno es un bug. Son las condiciones bajo las que está corriendo hoy.
 
-**El número de WhatsApp es de prueba** (`+1 555-145-1712`). Sólo puede
+**El número de WhatsApp es de prueba** (`+1 555-164-9389`; hasta el 05/11/2026 era `+1 555-145-1712`). Sólo puede
 escribirle a una lista blanca de hasta 5 destinatarios, que se administra en
 WhatsApp → Inicio rápido → Prueba la API → desplegable "Para". Cada número
 agregado recibe un código que tiene que confirmar.

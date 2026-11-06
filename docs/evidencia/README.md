@@ -19,6 +19,7 @@ el hash coincida en cualquier sistema.
 | `prueba-garantias_2026-10-26.json` | Concurrencia y repetición sobre una branch de Neon | §4.6, Tabla 15 |
 | `prueba-titularidad_2026-10-27.json` | Control de titularidad con dos teléfonos de prueba | §5.9 |
 | `firma-meta_2026-10-27.txt` | Rechazo de firmas falsas en el webhook de producción | §5.9 |
+| `prueba-whatsapp_2026-11-05.json` | Prueba por WhatsApp de extremo a extremo: capacidad, fecha pasada, reserva con pago, reserva repetida y cancelación | §5.9 |
 | `conversaciones-prueba_seudonimizadas.txt` | Conversaciones de prueba exportadas de WhatsApp | §5.6, Anexo I |
 | `clasificacion-mensajes_2026-10-27.csv` | Clasificación de los 62 mensajes del huésped | §5.6, Anexo I |
 

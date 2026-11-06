@@ -1,0 +1,902 @@
+{
+  "descripcion": "Prueba de extremo a extremo por WhatsApp sobre el despliegue de la versión documentada (v1.1-entrega), número del bot +1 (555) 164-9389. Ejecuciones del agente extraídas con consultas de solo lectura de la tabla AgentRun; nombres, correos e identificadores de pago reemplazados. Horas en UTC; hora argentina = UTC−3.",
+  "firma_meta": {
+    "mensajes_entrantes_aceptados_desde_el_cambio_de_numero": 24,
+    "ejecuciones_con_error": 0
+  },
+  "casos": {
+    "capacidad": [
+      {
+        "utc": "2026-11-06T00:49:11.811Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 1,
+        "ms": 961,
+        "huesped": "hola, quiero hacer una reserva",
+        "bot": "¡Hola! Con gusto te ayudo. Para empezar, por favor pasame los siguientes datos:\n\nNombre completo del huésped\nFecha de ingreso (check-in)\nFecha de egreso (check-out)\nCantidad de personas\n\nQuedo a la espera de esa información.",
+        "herramientas": []
+      },
+      {
+        "utc": "2026-11-06T00:50:55.764Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 2336,
+        "huesped": "somos 5 personas, necesito del 11/11 al 13/11 y me gustaria la habitacion 101",
+        "bot": "Disculpame, pero la *Hab. 101* tiene una capacidad máxima de 2 personas y ustedes son 5. Ninguna de nuestras habitaciones tiene capacidad para 5 personas juntas.\n\nPara poder alojarlos, tendríamos que reservar más de una habitación. ¿Te gustaría que busquemos disponibilidad para dos habitaciones para esas fechas? Si es así, por favor pasame el nombre completo del huésped para la reserva.",
+        "herramientas": [
+          {
+            "nombre": "consultar_habitaciones",
+            "args": {
+              "checkIn": "2026-11-11",
+              "checkOut": "2026-11-13"
+            },
+            "ok": true,
+            "resultado": {
+              "rooms": [
+                {
+                  "id": "cmpok9uy00001lsmvpsr4di3h",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "101",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyc0002lsmv9t0fsrnv",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "102",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyl0003lsmv2bofkvct",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "103",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyr0004lsmvytztjgka",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "201",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyw0005lsmvq4ddgtkc",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "202",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uz20006lsmvx3h1sb25",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "301",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                },
+                {
+                  "id": "cmpok9uz80007lsmvucvgfl7s",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "302",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "fecha pasada, reserva con seña y pago": [
+      {
+        "utc": "2026-11-06T01:59:01.758Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 1,
+        "ms": 2660,
+        "huesped": "hola, quiero hacer una reserva",
+        "bot": "¡Hola! Con gusto te ayudo. Para empezar, por favor pasame los siguientes datos:\n\nNombre completo del huésped\nFecha de ingreso (check-in)\nFecha de egreso (check-out)\nCantidad de personas\n\nQuedo a la espera de esa información.",
+        "herramientas": []
+      },
+      {
+        "utc": "2026-11-06T01:59:46.104Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 3460,
+        "huesped": "soy [nombre], necesito una reserva del 2/11/26 al 4/11/26 para 2 personas",
+        "bot": "Disculpame, [nombre], pero las fechas que me pasaste (del 02/11 al 04/11) ya pasaron. Hoy es 05/11.\n\n¿Querés buscar disponibilidad para otras fechas? Si es así, por favor decime cuándo te gustaría ingresar y cuándo retirarte.",
+        "herramientas": [
+          {
+            "nombre": "consultar_habitaciones",
+            "args": {
+              "checkIn": "2026-11-02",
+              "checkOut": "2026-11-04"
+            },
+            "ok": false,
+            "resultado": {
+              "error": "La fecha de ingreso (2026-11-02) ya pasó: hoy es 2026-11-05. Pedile al huésped una fecha desde hoy."
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:00:34.374Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 4270,
+        "huesped": "bueno, entonces para el 15/11 al 17/11",
+        "bot": "Perfecto, [nombre]. Para esas fechas tengo disponibilidad:\n\n*Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)\n*Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)\n\n¿Cuál te gustaría reservar?",
+        "herramientas": [
+          {
+            "nombre": "consultar_habitaciones",
+            "args": {
+              "checkIn": "2026-11-15",
+              "checkOut": "2026-11-17"
+            },
+            "ok": true,
+            "resultado": {
+              "rooms": [
+                {
+                  "id": "cmpok9uy00001lsmvpsr4di3h",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "101",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyc0002lsmv9t0fsrnv",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "102",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyl0003lsmv2bofkvct",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "103",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyr0004lsmvytztjgka",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "201",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyw0005lsmvq4ddgtkc",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "202",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uz20006lsmvx3h1sb25",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "301",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                },
+                {
+                  "id": "cmpok9uz80007lsmvucvgfl7s",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "302",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:00:51.010Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 3803,
+        "huesped": "la 101 por favor",
+        "bot": "Excelente, [nombre]. La *Hab. 101* para 2 noches (del 15/11 al 17/11) tiene un costo total de $30.000.\n\n¿Querés pagar una seña del 15% ($4.500) o el total ($30.000)?",
+        "herramientas": [
+          {
+            "nombre": "consultar_habitaciones",
+            "args": {
+              "checkIn": "2026-11-15",
+              "checkOut": "2026-11-17"
+            },
+            "ok": true,
+            "resultado": {
+              "rooms": [
+                {
+                  "id": "cmpok9uy00001lsmvpsr4di3h",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "101",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyc0002lsmv9t0fsrnv",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "102",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyl0003lsmv2bofkvct",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "103",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyr0004lsmvytztjgka",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "201",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyw0005lsmvq4ddgtkc",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "202",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uz20006lsmvx3h1sb25",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "301",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                },
+                {
+                  "id": "cmpok9uz80007lsmvucvgfl7s",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "302",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:01:08.086Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 1,
+        "ms": 839,
+        "huesped": "la seña",
+        "bot": "Perfecto, [nombre]. Para finalizar, ¿me pasás un email? Te mando la confirmación con un código QR para mostrar al llegar. Es opcional, si no querés, seguimos adelante igual.",
+        "herramientas": []
+      },
+      {
+        "utc": "2026-11-06T02:01:27.630Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 6631,
+        "huesped": "no, sin email",
+        "bot": "📋 Reserva *RML-3636* lista para confirmar.\nPara reservar tu lugar, realizá el pago de *$4.500* en el siguiente link:\n👉 https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=[preferencia]\nTenés *24 horas* para completar el pago. Pasado ese tiempo la reserva se cancela automáticamente.\n⚠️ Si necesitás una devolución, comunicate con el hotel:\n📧 [email]\n📞 +54 261 000-0000\nCuando hayas completado el pago, avisame acá y verifico que todo esté en orden. 👌",
+        "herramientas": [
+          {
+            "nombre": "crear_reserva",
+            "args": {
+              "roomId": "101",
+              "checkIn": "2026-11-15",
+              "checkOut": "2026-11-17",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "paymentType": "DEPOSIT"
+            },
+            "ok": true,
+            "resultado": {
+              "code": "RML-3636",
+              "status": "PENDING_PAYMENT",
+              "expiresAt": {},
+              "payAmount": 4500,
+              "hotelEmail": "[email]",
+              "hotelPhone": "+54 261 000-0000",
+              "paymentUrl": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=[preferencia]",
+              "totalPrice": 30000,
+              "paymentType": "DEPOSIT"
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:05:22.696Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 5417,
+        "huesped": "listo, ya pague",
+        "bot": "✅ ¡Perfecto! Tu reserva *RML-3636* está confirmada. ¡Te esperamos! 🏨",
+        "herramientas": [
+          {
+            "nombre": "consultar_reserva",
+            "args": {
+              "code": "RML-3636"
+            },
+            "ok": true,
+            "resultado": {
+              "id": "cmw4bw436000l07lc68coexxu",
+              "code": "RML-3636",
+              "room": "101",
+              "floor": 1,
+              "status": "CONFIRMED",
+              "checkIn": "2026-11-15",
+              "checkOut": "2026-11-17",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "totalPrice": null,
+              "pricePerNight": null
+            }
+          }
+        ]
+      }
+    ],
+    "reserva repetida y cancelación por código": [
+      {
+        "utc": "2026-11-06T02:07:34.382Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 9729,
+        "huesped": "hola, quiero hacer una reserva nueva para 2 personas, del 16 al 18 de noviembre",
+        "bot": "¡Hola! Para el 16/11 al 18/11 tengo disponibilidad en las siguientes habitaciones:\n\n*Hab. 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)\n*Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)\n\n¿Cuál te gustaría reservar? Y por favor, pasame el nombre completo del huésped.",
+        "herramientas": [
+          {
+            "nombre": "consultar_habitaciones",
+            "args": {
+              "checkIn": "2026-11-16",
+              "checkOut": "2026-11-18"
+            },
+            "ok": true,
+            "resultado": {
+              "rooms": [
+                {
+                  "id": "cmpok9uyc0002lsmv9t0fsrnv",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "102",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyl0003lsmv2bofkvct",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 1,
+                  "number": "103",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyr0004lsmvytztjgka",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "201",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uyw0005lsmvq4ddgtkc",
+                  "type": {
+                    "name": "Standard",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado"
+                    ],
+                    "maxGuests": 2
+                  },
+                  "floor": 2,
+                  "number": "202",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Standard",
+                  "pricePerNight": 15000
+                },
+                {
+                  "id": "cmpok9uz20006lsmvx3h1sb25",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "301",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                },
+                {
+                  "id": "cmpok9uz80007lsmvucvgfl7s",
+                  "type": {
+                    "name": "Suite",
+                    "amenities": [
+                      "WiFi",
+                      "AC",
+                      "TV",
+                      "Baño privado",
+                      "Bañera",
+                      "Mini-bar"
+                    ],
+                    "maxGuests": 4
+                  },
+                  "floor": 3,
+                  "number": "302",
+                  "status": "AVAILABLE",
+                  "ratePlanName": "Tarifa base Suite",
+                  "pricePerNight": 28000
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:08:16.903Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 13072,
+        "huesped": "vamos con la 102 , mi nombre es [nombre]",
+        "bot": "Excelente, [nombre]. La *Hab. 102* para 2 noches (del 16/11 al 18/11) tiene un costo total de $30.000.\n\n¿Querés pagar una seña del 15% ($4.500) o el total ($30.000)?\n\nAntes de avanzar, ¿me pasás un email? Te mando la confirmación con un código QR para mostrar al llegar. Es opcional.",
+        "herramientas": [
+          {
+            "nombre": "crear_reserva",
+            "args": {
+              "roomId": "102",
+              "checkIn": "2026-11-16",
+              "checkOut": "2026-11-18",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "paymentType": "DEPOSIT"
+            },
+            "ok": true,
+            "resultado": {
+              "code": "RML-4229",
+              "status": "PENDING_PAYMENT",
+              "expiresAt": {},
+              "payAmount": 4500,
+              "hotelEmail": "[email]",
+              "hotelPhone": "+54 261 000-0000",
+              "paymentUrl": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=[preferencia]",
+              "totalPrice": 30000,
+              "paymentType": "DEPOSIT"
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:09:16.441Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 10223,
+        "huesped": "la seña por favor",
+        "bot": "📋 Reserva *RML-4229* lista para confirmar.\nPara reservar tu lugar, realizá el pago de *$4.500* en el siguiente link:\n👉 https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=[preferencia]\nTenés *24 horas* para completar el pago. Pasado ese tiempo la reserva se cancela automáticamente.\n⚠️ Si necesitás una devolución, comunicate con el hotel:\n📧 [email]\n📞 +54 261 000-0000\nCuando hayas completado el pago, avisame acá y verifico que todo esté en orden. 👌",
+        "herramientas": [
+          {
+            "nombre": "crear_reserva",
+            "args": {
+              "roomId": "102",
+              "checkIn": "2026-11-16",
+              "checkOut": "2026-11-18",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "paymentType": "DEPOSIT"
+            },
+            "ok": true,
+            "resultado": {
+              "code": "RML-4229",
+              "nights": 2,
+              "status": "PENDING_PAYMENT",
+              "expiresAt": {},
+              "payAmount": 4500,
+              "yaExistia": true,
+              "hotelEmail": "[email]",
+              "hotelPhone": "+54 261 000-0000",
+              "paymentUrl": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=[preferencia]",
+              "totalPrice": 30000,
+              "paymentType": "DEPOSIT"
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:09:36.883Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 1,
+        "ms": 844,
+        "huesped": "quiero cancelar una reserva",
+        "bot": "Entendido, [nombre]. Para poder ayudarte con la cancelación, por favor pasame el código RML de la reserva que querés dar de baja.",
+        "herramientas": []
+      },
+      {
+        "utc": "2026-11-06T02:09:57.341Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 2,
+        "ms": 5619,
+        "huesped": "*RML-4229*",
+        "bot": "Confirmame por favor si querés cancelar la reserva *RML-4229* a nombre de [nombre] para la habitación 102 (del 16/11/2026 al 18/11/2026). Una vez que me des el OK, procedo con la cancelación.",
+        "herramientas": [
+          {
+            "nombre": "consultar_reserva",
+            "args": {
+              "code": "RML-4229"
+            },
+            "ok": true,
+            "resultado": {
+              "id": "cmw4c4ujw001707lcepohqglk",
+              "code": "RML-4229",
+              "room": "102",
+              "floor": 1,
+              "status": "PENDING_PAYMENT",
+              "checkIn": "2026-11-16",
+              "checkOut": "2026-11-18",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "totalPrice": null,
+              "pricePerNight": null
+            }
+          }
+        ]
+      },
+      {
+        "utc": "2026-11-06T02:10:22.268Z",
+        "estado": "OK",
+        "modelo": "gemini-3.1-flash-lite",
+        "iteraciones": 3,
+        "ms": 16967,
+        "huesped": "ok",
+        "bot": "Listo, [nombre]. La reserva *RML-4229* ha sido cancelada correctamente. ¿Necesitás ayuda con algo más?",
+        "herramientas": [
+          {
+            "nombre": "consultar_reserva",
+            "args": {
+              "code": "RML-4229"
+            },
+            "ok": true,
+            "resultado": {
+              "id": "cmw4c4ujw001707lcepohqglk",
+              "code": "RML-4229",
+              "room": "102",
+              "floor": 1,
+              "status": "PENDING_PAYMENT",
+              "checkIn": "2026-11-16",
+              "checkOut": "2026-11-18",
+              "guestName": "[nombre]",
+              "numGuests": 2,
+              "totalPrice": null,
+              "pricePerNight": null
+            }
+          },
+          {
+            "nombre": "cancelar_reserva",
+            "args": {
+              "id": "cmw4c4ujw001707lcepohqglk"
+            },
+            "ok": true,
+            "resultado": {
+              "id": "cmw4c4ujw001707lcepohqglk",
+              "code": "RML-4229",
+              "status": "CANCELLED"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "reservas": [
+    {
+      "codigo": "RML-3636",
+      "estado": "CONFIRMED",
+      "habitacion": "101",
+      "personas": 2,
+      "ingreso": "2026-11-15",
+      "egreso": "2026-11-17",
+      "pago": "APPROVED",
+      "modalidad": "DEPOSIT"
+    },
+    {
+      "codigo": "RML-4229",
+      "estado": "CANCELLED",
+      "habitacion": "102",
+      "personas": 2,
+      "ingreso": "2026-11-16",
+      "egreso": "2026-11-18",
+      "pago": "PENDING",
+      "modalidad": "DEPOSIT"
+    }
+  ]
+}
