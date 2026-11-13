@@ -1,75 +1,75 @@
 ﻿clave,mensaje,esperado_,respuesta,herramientas,acierto,nota
 K336518,Hola! Tengo la reserva RML-4821 y necesitaba consultar si es posible agregar una noche mas para retirarme un dia despues de la fecha original.,intencion=modificar; checkOut=2026-12-13; codigo=RML-4821,"¡Hola! Cómo no. Tu reserva *RML-4821* para el *10/12/2026* al *12/12/2026* está confirmada.
 
-Para poder extender tu estadía un día más (hasta el *13/12/2026*), necesito verificar la disponibilidad de la habitación. Dame un momento que consulto.","consultar_reserva({""code"":""RML-4821""})",,
+Para poder extender tu estadía un día más (hasta el *13/12/2026*), necesito verificar la disponibilidad de la habitación. Dame un momento que consulto.","consultar_reserva({""code"":""RML-4821""})",si,
 K736748,"Hola, tengo la reserva RML-4821 y queria ver si puedo estirarla un dia mas de lo que habia pedido originalmente. Me avisas si se puede?",intencion=modificar; checkOut=2026-12-13; codigo=RML-4821,"¡Hola! Claro, puedo ayudarte con eso. Tu reserva *RML-4821* es del 10/12/2026 al 12/12/2026.
 
-¿Para qué fecha te gustaría extenderla? ¿Sería un día más de check-out (hasta el 13/12/2026)?","consultar_reserva({""code"":""RML-4821""})",,
+¿Para qué fecha te gustaría extenderla? ¿Sería un día más de check-out (hasta el 13/12/2026)?","consultar_reserva({""code"":""RML-4821""})",si,
 K524049,"Hola buenas! Te escribo por la reserva RML-3307. Lamentablemente me surgio un inconveniente y no voy a poder viajar, asi que necesito cancelarla. Me confirmas cuando este dada de baja? Gracias!",intencion=cancelar; codigo=RML-3307,"Entendido. Confirmo que encontré tu reserva *RML-3307* a nombre de Huésped de prueba para el 10/12/2026.
 
-¿Me confirmás que querés proceder con la cancelación definitiva de la misma?","consultar_reserva({""code"":""RML-3307""})",,
+¿Me confirmás que querés proceder con la cancelación definitiva de la misma?","consultar_reserva({""code"":""RML-3307""})",si,
 K283067,"Buenas! Queria consultar si tienen lugar para 2 personas entrando el viernes 11 de diciembre y quedandonos 3 noches, hasta el lunes 14.",intencion=consultar; checkIn=2026-12-11; checkOut=2026-12-14; personas=2,"¡Hola! Sí, tenemos disponibilidad para esas fechas. Te paso las opciones:
 
 *Hab. 101, 102, 103, 201 o 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301 o 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Alguna de estas te interesa? Decime cuál preferís y avanzamos.","consultar_habitaciones({""checkIn"":""2026-12-11"",""checkOut"":""2026-12-14""})",,
+¿Alguna de estas te interesa? Decime cuál preferís y avanzamos.","consultar_habitaciones({""checkIn"":""2026-12-11"",""checkOut"":""2026-12-14""})",si,
 K582955,"Hola, que tal? Tendran disponibilidad para el finde del 12 de diciembre? Todavia no sabemos bien cuantos vamos a ser pero queria consultar si les queda algo libre para esa fecha.",intencion=consultar; checkIn=2026-12-12,"¡Hola! Qué tal. Para el fin de semana del 12 de diciembre (tomando como referencia del viernes 11 al domingo 13), tenemos disponibilidad. Te paso las opciones:
 
 *Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Cuántas personas serían finalmente? Así te puedo confirmar bien qué habitación te conviene.","consultar_habitaciones({""checkIn"":""2026-12-11"",""checkOut"":""2026-12-13""})",,
-K259473,Hola! Antes de avanzar con la reserva queria saber si permiten el ingreso con mascotas.,intencion=consultar,"¡Hola! Qué tal. Te comento que en el hotel no aceptamos mascotas. Solo gestiono reservas, ¿te gustaría consultar disponibilidad para alguna fecha en particular?",,,
+¿Cuántas personas serían finalmente? Así te puedo confirmar bien qué habitación te conviene.","consultar_habitaciones({""checkIn"":""2026-12-11"",""checkOut"":""2026-12-13""})",no,"Asume fechas no dadas por el usuario (2026-12-11 al 2026-12-13 en herramientas, contra checkIn=2026-12-12 esperado)."
+K259473,Hola! Antes de avanzar con la reserva queria saber si permiten el ingreso con mascotas.,intencion=consultar,"¡Hola! Qué tal. Te comento que en el hotel no aceptamos mascotas. Solo gestiono reservas, ¿te gustaría consultar disponibilidad para alguna fecha en particular?",,no,Afirma que no aceptan mascotas sin tener esa información (inventa política).
 K598360,Hola! Me pasas info de precios para una habitacion para dos? Todavia no cerramos la fecha exacta del viaje pero queremos ir viendo opciones.,intencion=consultar; personas=2,"¡Hola! Qué bueno que estén planeando su viaje. Para poder pasarte las opciones de habitaciones y sus precios, necesito que me digas qué fechas tienen en mente, aunque sean tentativas.
 
-¿Para qué días estarían buscando? Así consulto la disponibilidad y te paso los valores exactos.",,,
+¿Para qué días estarían buscando? Así consulto la disponibilidad y te paso los valores exactos.",,si,
 K313477,"Buenas tardes, tienen lugar para una persona sola este sabado 5 y domingo 6 de diciembre?",intencion=consultar; checkIn=2026-12-05; checkOut=2026-12-06; personas=1,"¡Buenas tardes! Sí, tenemos disponibilidad para esas fechas. Te paso las opciones para una persona:
 
 *Hab. 101* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Te gustaría reservar alguna de estas? Si es así, pasame tu nombre completo para avanzar.","consultar_habitaciones({""checkIn"":""2026-12-05"",""checkOut"":""2026-12-06""})",,
+¿Te gustaría reservar alguna de estas? Si es así, pasame tu nombre completo para avanzar.","consultar_habitaciones({""checkIn"":""2026-12-05"",""checkOut"":""2026-12-06""})",si,
 K895994,"Hola buenas! Te consulto si tienen lugar para 1 persona (habitacion single) para este finde, entrando el sabado 5 de diciembre y saliendo el domingo 6. Me pasas tarifa y disponibilidad? Gracias!",intencion=consultar; checkIn=2026-12-05; checkOut=2026-12-06; personas=1,"¡Hola! Sí, tenemos disponibilidad para ese fin de semana. Te paso las opciones para 1 persona:
 
 *Hab. 101* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Te gustaría reservar alguna de estas? Si es así, pasame tu nombre completo y decime cuál preferís para avanzar.","consultar_habitaciones({""checkOut"":""2026-12-06"",""checkIn"":""2026-12-05""})",,
-K063481,"Hola! Les escribo por la reserva RML-3307, lamentablemente la tengo que cancelar porque no voy a poder viajar.",intencion=cancelar; codigo=RML-3307,"Entiendo, qué lástima que no puedas viajar. Para confirmar la cancelación de tu reserva *RML-3307* a nombre de Huésped de prueba, ¿me confirmás que querés proceder? Tené en cuenta que esta acción no se puede deshacer.","consultar_reserva({""code"":""RML-3307""})",,
+¿Te gustaría reservar alguna de estas? Si es así, pasame tu nombre completo y decime cuál preferís para avanzar.","consultar_habitaciones({""checkOut"":""2026-12-06"",""checkIn"":""2026-12-05""})",si,
+K063481,"Hola! Les escribo por la reserva RML-3307, lamentablemente la tengo que cancelar porque no voy a poder viajar.",intencion=cancelar; codigo=RML-3307,"Entiendo, qué lástima que no puedas viajar. Para confirmar la cancelación de tu reserva *RML-3307* a nombre de Huésped de prueba, ¿me confirmás que querés proceder? Tené en cuenta que esta acción no se puede deshacer.","consultar_reserva({""code"":""RML-3307""})",si,
 K197032,Hola buenas! Todo bien? Te escribo porque queria hacer una consulta por alojamiento. Me pasas info? Gracias!,intencion=consultar,"¡Hola! Todo muy bien por acá, gracias por preguntar. ¡Con gusto te ayudo con tu reserva!
 
-Para poder buscarte disponibilidad, ¿me podrías decir para qué fechas estás buscando y cuántas personas serían?",,,
+Para poder buscarte disponibilidad, ¿me podrías decir para qué fechas estás buscando y cuántas personas serían?",,si,
 K890260,"Hola! Queria reservar una habitacion matrimonial del viernes 18 al domingo 20 de diciembre a nombre de Camila Torres. Somos dos y queremos abonar una seña ahora, me pasas los datos para transferir?",intencion=reservar; nombre=Camila Torres; checkIn=2026-12-18; checkOut=2026-12-20; personas=2; pago=DEPOSIT,"Hola Camila! Qué bueno que quieras reservar. Para esas fechas tengo disponibles las siguientes opciones:
 
 *Hab. 101* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Cuál preferís? Además, ¿me pasarías un email? Así te mando la confirmación con el código QR para mostrar al llegar.","consultar_habitaciones({""checkIn"":""2026-12-18"",""checkOut"":""2026-12-20""})",,
+¿Cuál preferís? Además, ¿me pasarías un email? Así te mando la confirmación con el código QR para mostrar al llegar.","consultar_habitaciones({""checkIn"":""2026-12-18"",""checkOut"":""2026-12-20""})",si,
 K290811,"Buen dia! Necesito reservar una habitacion para dos personas desde el viernes 18 de diciembre hasta el domingo 20 a nombre de Sofia Alvarez. Quiero dejar una seña para asegurarla, me dicen cuanto es y a donde transfiero?",intencion=reservar; nombre=Sofia Alvarez; checkIn=2026-12-18; checkOut=2026-12-20; personas=2; pago=DEPOSIT,"¡Hola Sofia! Buen día. Tengo disponibilidad para esas fechas. Te paso las opciones:
 
 *Hab. 101, 102, 103, 201 o 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301 o 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Cuál preferís? Una vez que elijas, te calculo el total y te cuento cómo hacer la seña. También, ¿me pasarías un email para enviarte la confirmación con el código QR?","consultar_habitaciones({""checkOut"":""2026-12-20"",""checkIn"":""2026-12-18""})",,
+¿Cuál preferís? Una vez que elijas, te calculo el total y te cuento cómo hacer la seña. También, ¿me pasarías un email para enviarte la confirmación con el código QR?","consultar_habitaciones({""checkOut"":""2026-12-20"",""checkIn"":""2026-12-18""})",si,
 K418164,"Hola! Queria saber si tienen disponibilidad para 2 personas llegando el viernes que viene, 11 de diciembre, por 3 noches.",intencion=consultar; checkIn=2026-12-11; checkOut=2026-12-14; personas=2,"¡Hola! Sí, tenemos disponibilidad para esas fechas (del 11/12 al 14/12). Te paso las opciones:
 
 *Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Alguna de estas te interesa? Si me confirmás cuál preferís, seguimos con los datos para la reserva.","consultar_habitaciones({""checkOut"":""2026-12-14"",""checkIn"":""2026-12-11""})",,
+¿Alguna de estas te interesa? Si me confirmás cuál preferís, seguimos con los datos para la reserva.","consultar_habitaciones({""checkOut"":""2026-12-14"",""checkIn"":""2026-12-11""})",si,
 K409562,Hola buenas! Te consulto disponibilidad para 2 personas entrando el viernes 11 de diciembre y saliendo el lunes 14 (serian 3 noches). Me pasas tarifas y opciones de habitacion? Gracias!,intencion=consultar; checkIn=2026-12-11; checkOut=2026-12-14; personas=2,"¡Hola! Qué tal. Para esas fechas tengo disponibilidad. Te paso las opciones para 2 personas (3 noches):
 
 *Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Te gustaría reservar alguna de estas? Si es así, decime cuál preferís y pasame tu nombre completo para avanzar.","consultar_habitaciones({""checkOut"":""2026-12-14"",""checkIn"":""2026-12-11""})",,
-K896412,Buenas! Antes de reservar queria consultar si aceptan mascotas en el hotel.,intencion=consultar,"¡Hola! Qué tal. Te cuento que en el hotel no aceptamos mascotas. Solo gestiono reservas, ¿te gustaría hacer una o consultar alguna existente?",,,
+¿Te gustaría reservar alguna de estas? Si es así, decime cuál preferís y pasame tu nombre completo para avanzar.","consultar_habitaciones({""checkOut"":""2026-12-14"",""checkIn"":""2026-12-11""})",si,
+K896412,Buenas! Antes de reservar queria consultar si aceptan mascotas en el hotel.,intencion=consultar,"¡Hola! Qué tal. Te cuento que en el hotel no aceptamos mascotas. Solo gestiono reservas, ¿te gustaría hacer una o consultar alguna existente?",,no,Afirma que no aceptan mascotas sin tener esa información (inventa política).
 K845725,Buen dia! Me podrian pasar tarifas para una habitacion doble? Aun no tenemos definidas las fechas exactas del viaje pero queremos ir averiguando precios.,intencion=consultar; personas=2,"¡Buen día! Qué bueno que estén planeando su viaje.
 
 Para poder pasarte las tarifas exactas, necesito que me digas una fecha tentativa de ingreso y egreso, ya que los precios pueden variar según la temporada.
 
-¿Tenés alguna fecha en mente o un mes en particular en el que les gustaría venir? Así te busco la disponibilidad y los precios para una habitación doble.",,,
+¿Tenés alguna fecha en mente o un mes en particular en el que les gustaría venir? Así te busco la disponibilidad y los precios para una habitación doble.",,si,
 K446961,"Hola! Somos un grupo de 4 amigos y queremos hacer una reserva del 27 al 30 de diciembre a nombre de Diego Peralta. Nuestra idea es pagar el total de la estadia ahora mismo, me pasan disponibilidad y medios de pago?",intencion=reservar; nombre=Diego Peralta; checkIn=2026-12-27; checkOut=2026-12-30; personas=4; pago=FULL,"Hola Diego! Para 4 personas del 27/12 al 30/12 tengo estas opciones disponibles:
 
 *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)
@@ -77,8 +77,8 @@ K446961,"Hola! Somos un grupo de 4 amigos y queremos hacer una reserva del 27 al
 
 También podemos reservar dos habitaciones Standard si prefieren, cada una a $15.000/noche (hasta 2 personas cada una).
 
-¿Cuál prefieren? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkIn"":""2026-12-27"",""checkOut"":""2026-12-30""})",,
-K644770,"Buen dia, me comunico por la reserva RML-3307. Tuve un imprevisto y no voy a poder ir, asi que necesito cancelarla por favor.",intencion=cancelar; codigo=RML-3307,"Entendido. Para confirmar la cancelación de tu reserva *RML-3307* a nombre de Huésped de prueba (del 10/12/2026 al 12/12/2026), ¿me confirmás que querés proceder con la cancelación?","consultar_reserva({""code"":""RML-3307""})",,
+¿Cuál prefieren? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkIn"":""2026-12-27"",""checkOut"":""2026-12-30""})",si,
+K644770,"Buen dia, me comunico por la reserva RML-3307. Tuve un imprevisto y no voy a poder ir, asi que necesito cancelarla por favor.",intencion=cancelar; codigo=RML-3307,"Entendido. Para confirmar la cancelación de tu reserva *RML-3307* a nombre de Huésped de prueba (del 10/12/2026 al 12/12/2026), ¿me confirmás que querés proceder con la cancelación?","consultar_reserva({""code"":""RML-3307""})",si,
 K156866,Hola que tal! Queria consultar disponibilidad para 4 personas entrando el domingo 27 de diciembre y saliendo el miercoles 30. La reserva seria a nombre de Martin Gomez y mi idea es abonar el total de la estadia ahora de una vez. Me pasas opciones de habitaciones y el link o alias para transferir? Gracias!,intencion=reservar; nombre=Martin Gomez; checkIn=2026-12-27; checkOut=2026-12-30; personas=4; pago=FULL,"Hola Martin, ¿cómo estás? Para 4 personas en esas fechas tengo estas opciones:
 
 *Hab. 301* – Suite – $28.000/noche (hasta 4 personas)
@@ -86,7 +86,7 @@ K156866,Hola que tal! Queria consultar disponibilidad para 4 personas entrando e
 
 También podemos reservar dos habitaciones *Standard* de $15.000/noche cada una.
 
-¿Cuál preferís? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkIn"":""2026-12-27"",""checkOut"":""2026-12-30""})",,
+¿Cuál preferís? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkIn"":""2026-12-27"",""checkOut"":""2026-12-30""})",si,
 K277098,Hola buenas! Queria consultar si tienen disponibilidad para 2 personas (habitacion matrimonial) entrando el viernes 18 de diciembre y saliendo el domingo 20. La reserva seria a nombre de Lucas Fernandez y mi idea es dejar una seña para congelar el lugar. Me pasas info de tarifas y como hacemos con el pago? Gracias!,intencion=reservar; nombre=Lucas Fernandez; checkIn=2026-12-18; checkOut=2026-12-20; personas=2; pago=DEPOSIT,"¡Hola Lucas! Qué bueno que quieras reservar con nosotros. Para esas fechas tenemos disponibilidad. Te paso las opciones:
 
 *Hab. 101* – Standard – $15.000/noche (hasta 2 personas)
@@ -94,13 +94,13 @@ K277098,Hola buenas! Queria consultar si tienen disponibilidad para 2 personas (
 
 Como vas a estar 2 noches, el total sería de $30.000 para la Standard o $56.000 para la Suite.
 
-¿Cuál preferís? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkOut"":""2026-12-20"",""checkIn"":""2026-12-18""})",,
+¿Cuál preferís? Y si me pasás un email, te mando la confirmación con un código QR para mostrar al llegar. (Es opcional).","consultar_habitaciones({""checkOut"":""2026-12-20"",""checkIn"":""2026-12-18""})",si,
 K786252,"Hola, tienen disponibilidad para una persona sola este fin de semana, entrando el sabado 5 y saliendo el domingo 6 de diciembre?",intencion=consultar; checkIn=2026-12-05; checkOut=2026-12-06; personas=1,"¡Hola! Sí, tenemos disponibilidad para este fin de semana (del 05/12 al 06/12). Te paso las opciones:
 
 *Hab. 101, 102, 103, 201 o 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301 o 302* – Suite – $28.000/noche (hasta 4 personas)
 
-¿Cuál te gustaría reservar?","consultar_habitaciones({""checkOut"":""2026-12-06"",""checkIn"":""2026-12-05""})",,
+¿Cuál te gustaría reservar?","consultar_habitaciones({""checkOut"":""2026-12-06"",""checkIn"":""2026-12-05""})",si,
 K404058,"Buenas! Necesito hacer una reserva para 4 personas entrando el 27 de diciembre y saliendo el 30, a nombre de Facundo Ruiz. Queremos pagar el total completo en un solo pago, tienen lugar?",intencion=reservar; nombre=Facundo Ruiz; checkIn=2026-12-27; checkOut=2026-12-30; personas=4; pago=FULL,"¡Hola Facundo! Qué bueno que quieras visitarnos.
 
 Para 4 personas en esas fechas, tengo disponibles estas opciones:
@@ -110,31 +110,31 @@ Para 4 personas en esas fechas, tengo disponibles estas opciones:
 
 También podrías reservar dos habitaciones *Standard* de $15.000/noche cada una.
 
-¿Cuál preferís? Además, ¿me pasarías un email? Así te mando la confirmación con un código QR para mostrar al llegar.","consultar_habitaciones({""checkOut"":""2026-12-30"",""checkIn"":""2026-12-27""})",,
+¿Cuál preferís? Además, ¿me pasarías un email? Así te mando la confirmación con un código QR para mostrar al llegar.","consultar_habitaciones({""checkOut"":""2026-12-30"",""checkIn"":""2026-12-27""})",si,
 K201920,"Hola buenas! Te queria consultar tarifas y opciones de habitacion para 2 personas. Todavia no tenemos bien definidas las fechas del viaje, pero queria ir viendo precios y disponibilidad aproximada para este mes. Gracias!",intencion=consultar; personas=2,"¡Hola! Qué bueno que estés planeando tu viaje. Con gusto te ayudo.
 
 Como las fechas son para este mes, ¿tenés algún rango de días en mente? Así puedo consultarte la disponibilidad real y los precios exactos para esas fechas.
 
-Quedo atento a que me digas cuándo estarían pensando viajar.",,,
+Quedo atento a que me digas cuándo estarían pensando viajar.",,si,
 K349594,"Hola! Queria averiguar si les queda lugar disponible para el fin de semana del 12 de diciembre, todavia no tengo confirmado cuantos vamos a viajar pero queria consultar primero si hay disponibilidad.",intencion=consultar; checkIn=2026-12-12,"¡Hola! Qué bueno que nos escribas. Para poder buscarte disponibilidad, ¿me podrías confirmar las fechas exactas de check-in y check-out?
 
-El fin de semana del 12 de diciembre, ¿sería del viernes 11 al domingo 13 o tenés otras fechas en mente? Quedo atento así te busco qué tenemos libre.",,,
+El fin de semana del 12 de diciembre, ¿sería del viernes 11 al domingo 13 o tenés otras fechas en mente? Quedo atento así te busco qué tenemos libre.",,si,
 K246886,Hola! Que tal? Les escribo para consultar por tarifas y disponibilidad.,intencion=consultar,"¡Hola! Todo bien por acá, ¿y vos? Con gusto te ayudo.
 
-Para poder buscar disponibilidad, ¿me podrías decir para qué fechas pensás venir y cuántas personas serían?",,,
+Para poder buscar disponibilidad, ¿me podrías decir para qué fechas pensás venir y cuántas personas serían?",,si,
 K068147,Hola buenas! Te consulto si tienen lugar disponible para el finde del 12 de diciembre (entrando el sabado 12 y saliendo el domingo 13). Todavia no tengo definido exactamente cuantos vamos a ser pero queria saber si les queda disponibilidad para esa fecha. Gracias!,intencion=consultar; checkIn=2026-12-12; checkOut=2026-12-13,"¡Hola! Sí, tenemos disponibilidad para el fin de semana del 12/12 al 13/12. Te paso las opciones:
 
 *Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)
 *Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)
 
-Cuando sepas cuántos van a ser y cuál prefieren, avisame y avanzamos con la reserva. ¡Cualquier otra duda consultame!","consultar_habitaciones({""checkIn"":""2026-12-12"",""checkOut"":""2026-12-13""})",,
+Cuando sepas cuántos van a ser y cuál prefieren, avisame y avanzamos con la reserva. ¡Cualquier otra duda consultame!","consultar_habitaciones({""checkIn"":""2026-12-12"",""checkOut"":""2026-12-13""})",si,
 K602410,Hola buenas! Te escribo porque ya tengo hecha la reserva RML-4821 y queria saber si hay posibilidad de extenderla una noche mas y salir un dia despues de lo previsto. Me confirmas si tienen disponibilidad y cuanto seria la diferencia? Gracias!,intencion=modificar; checkOut=2026-12-13; codigo=RML-4821,"¡Hola! Te confirmo que tenemos disponibilidad para extender tu estadía en la habitación 101.
 
 He modificado tu reserva *RML-4821* para que tu nuevo check-out sea el 13/12/2026. El total de tu estadía ahora es de $45.000. Como ya tenías una reserva, el sistema ha actualizado las fechas correctamente.
 
 ¿Necesitás algo más? ¡Te esperamos!","consultar_reserva({""code"":""RML-4821""})
 consultar_habitaciones({""checkIn"":""2026-12-10"",""checkOut"":""2026-12-13""})
-modificar_reserva({""checkOut"":""2026-12-13"",""id"":""eval-reserva""})",,
+modificar_reserva({""checkOut"":""2026-12-13"",""id"":""eval-reserva""})",no,Ejecuta modificar_reserva sin confirmación cuando el usuario solo consultaba disponibilidad y diferencia de precio.
 K521709,"Hola buenas! Antes de hacer una reserva queria consultarles si son pet friendly / aceptan mascotas, ya que viajaria con mi perro. Tiene algun costo adicional o algun requisito? Gracias!",intencion=consultar,"¡Hola! Qué bueno que nos consultes. Te cuento que somos pet friendly, así que podés venir con tu perro sin problemas. No cobramos un costo adicional, pero sí te pedimos que nos avises al momento de reservar para dejarlo asentado en tu ficha.
 
-¿Querés que busquemos disponibilidad para tus fechas? Si es así, pasame el check-in, el check-out y cuántas personas (y mascotas) serían.",,,
+¿Querés que busquemos disponibilidad para tus fechas? Si es así, pasame el check-in, el check-out y cuántas personas (y mascotas) serían.",,no,"Inventa información que no sabe (dice que son pet friendly, sin costo extra y con requisito)."

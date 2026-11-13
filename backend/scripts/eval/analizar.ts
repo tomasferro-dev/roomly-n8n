@@ -144,6 +144,10 @@ function main() {
   const variacion: Record<string, unknown> = {};
   for (const [modelo, corridas] of Object.entries(acierto)) {
     const cs = Object.values(corridas);
+    if (cs.length < 2) {
+      md.push(`| ${modelo} | ${cs.length} | No se informa: hace falta más de una corrida | — |`);
+      continue;
+    }
     const comunes = corpus.map((m) => m.id).filter((id) => cs.every((r) => id in r));
     const iguales = comunes.filter((id) => new Set(cs.map((r) => r[id])).size === 1).length;
     const precs = cs.map((r) => Object.values(r).filter(Boolean).length / Object.values(r).length);
@@ -161,7 +165,19 @@ function main() {
   const p = mcnemar(soloA, soloB);
   out.comparacion = { pares: pares.length, soloPrincipal: soloA, soloRespaldo: soloB, p };
   md.push("", "## Comparación de modelos (corrida 1)", "",
-    `${pares.length} mensajes pareados. Acierta sólo ${MODELOS[0]}: ${soloA}; sólo ${MODELOS[1]}: ${soloB}. McNemar exacta: p = ${p.toFixed(3).replace(".", ",")} → ${p < 0.05 ? "diferencia significativa" : "sin diferencia significativa"} (α = 0,05).`, "");
+    pares.length === 0
+      ? "No se informa: se corrió un solo modelo."
+      : `${pares.length} mensajes pareados. Acierta sólo ${MODELOS[0]}: ${soloA}; sólo ${MODELOS[1]}: ${soloB}. McNemar exacta: p = ${p.toFixed(3).replace(".", ",")} → ${p < 0.05 ? "diferencia significativa" : "sin diferencia significativa"} (α = 0,05).`, "");
+
+  // ── Acuerdo entre los autores al clasificar (sección 6) ───────────────────
+  const clas = leerTabla(path.join(DATOS, "clasificacion.csv")).filter((f) => f.acierto_A && f.acierto_B);
+  if (clas.length) {
+    const kc = kappa(clas.map((f) => norm(f.acierto_A)), clas.map((f) => norm(f.acierto_B)));
+    const iguales = clas.filter((f) => norm(f.acierto_A) === norm(f.acierto_B)).length;
+    out.clasificacion = { n: clas.length, iguales, kappa: kc };
+    md.push("## Acuerdo entre autores al clasificar", "",
+      `Coincidieron en ${iguales} de ${clas.length} respuestas; kappa de Cohen ${kc.toFixed(2).replace(".", ",")}. Los desacuerdos se resolvieron por consenso (nota de cada fila en clasificacion.csv).`, "");
+  }
 
   // ── Precisión por campo (automática, sobre los argumentos) ────────────────
   const campoArg: Record<string, (e: Ejecucion) => unknown> = {

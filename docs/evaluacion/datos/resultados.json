@@ -1,0 +1,108 @@
+{
+ "generado": "2026-11-13T13:28:20.612Z",
+ "sinClasificar": 0,
+ "etiquetado": {
+  "mensajes": 150,
+  "kappaIntencion": 0.9193176579068696,
+  "acuerdoCampo": {
+   "nombre": 1,
+   "checkIn": 1,
+   "checkOut": 1,
+   "personas": 1,
+   "habitacion": 1,
+   "pago": 1,
+   "codigo": 1
+  }
+ },
+ "precision": [
+  {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "aciertos": 23,
+   "n": 29,
+   "precision": 0.7931034482758621,
+   "ic": [
+    0.6160990944322833,
+    0.9015392985954367
+   ]
+  }
+ ],
+ "oe2": {
+  "aciertos": 23,
+  "n": 29,
+  "precision": 0.7931034482758621,
+  "limiteInferior": 0.6160990944322833,
+  "veredicto": "No cumplido"
+ },
+ "porCategoria": {
+  "Completo": {
+   "aciertos": 6,
+   "n": 6
+  },
+  "Parcial": {
+   "aciertos": 5,
+   "n": 6
+  },
+  "Fecha relativa": {
+   "aciertos": 6,
+   "n": 6
+  },
+  "Gestión": {
+   "aciertos": 4,
+   "n": 6
+  },
+  "Otro": {
+   "aciertos": 2,
+   "n": 5
+  }
+ },
+ "variacion": {},
+ "comparacion": {
+  "pares": 0,
+  "soloPrincipal": 0,
+  "soloRespaldo": 0,
+  "p": 1
+ },
+ "clasificacion": {
+  "n": 29,
+  "iguales": 27,
+  "kappa": 0.7583333333333332
+ },
+ "porCampo": {
+  "nombre": {
+   "correctos": 0,
+   "comparados": 0
+  },
+  "checkIn": {
+   "correctos": 13,
+   "comparados": 14
+  },
+  "checkOut": {
+   "correctos": 14,
+   "comparados": 14
+  },
+  "personas": {
+   "correctos": 0,
+   "comparados": 0
+  },
+  "habitacion": {
+   "correctos": 0,
+   "comparados": 0
+  },
+  "pago": {
+   "correctos": 0,
+   "comparados": 0
+  },
+  "codigo": {
+   "correctos": 6,
+   "comparados": 6
+  }
+ },
+ "latencia": {
+  "gemini-3.1-flash-lite": {
+   "n": 29,
+   "mediana": 14580,
+   "p95": 77092.99999999997
+  }
+ }
+}
