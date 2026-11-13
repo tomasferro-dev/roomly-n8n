@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { expirePendingPayments } from "@/services/payment.service";
 import { limpiarEventosViejos } from "@/lib/dedup";
 import { limpiarMarcasDeBarrido } from "@/lib/sweep";
+import { purgarDatosVencidos, seudonimizarTrazasViejas } from "@/lib/retencion";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,6 +49,8 @@ export async function GET(req: NextRequest) {
     const { confirmadas, vencidas, huerfanas } = await expirePendingPayments();
     const eventos = await limpiarEventosViejos();
     const marcas  = await limpiarMarcasDeBarrido();
+    const purgados = await purgarDatosVencidos();
+    const seudonimizadas = await seudonimizarTrazasViejas();
 
     const resumen = {
       ok: true,
@@ -56,6 +59,9 @@ export async function GET(req: NextRequest) {
       reservasHuerfanas: huerfanas,
       eventosPurgados: eventos,
       marcasPurgadas: marcas,
+      mensajesPurgados: purgados.mensajes,
+      trazasPurgadas: purgados.trazas,
+      trazasSeudonimizadas: seudonimizadas,
       durationMs: Date.now() - inicio,
     };
     console.log("[cron] barrido completo:", resumen);

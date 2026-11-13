@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import { prisma } from "@/lib/prisma";
+import { diasDeRetencion } from "@/lib/retencion";
+
+export const dynamic = "force-dynamic";
 
 /**
  * Política de privacidad pública.
@@ -8,8 +12,10 @@ import type { Metadata } from "next";
  * Queda fuera del middleware (su matcher cubre sólo /dashboard y /api/v1), así
  * que se ve sin sesión.
  *
- * El email de contacto sale de PRIVACY_CONTACT_EMAIL; si no está, el canal para
- * ejercer derechos es el propio WhatsApp del bot.
+ * Describe lo que el sistema hace de verdad: el plazo de conservación es el de
+ * lib/retencion.ts y los pedidos de acceso o supresión los atiende el hotel por
+ * email. El bot de WhatsApp no procesa esos pedidos. El email sale de
+ * PRIVACY_CONTACT_EMAIL o, si no está, del email cargado para el hotel.
  */
 
 export const metadata: Metadata = {
@@ -17,7 +23,7 @@ export const metadata: Metadata = {
   description: "Cómo Roomly trata los datos de quienes reservan por WhatsApp.",
 };
 
-const ACTUALIZADA = "5 de noviembre de 2026";
+const ACTUALIZADA = "12 de noviembre de 2026";
 
 function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
@@ -28,8 +34,10 @@ function Seccion({ titulo, children }: { titulo: string; children: React.ReactNo
   );
 }
 
-export default function PrivacidadPage() {
-  const contacto = process.env.PRIVACY_CONTACT_EMAIL?.trim();
+export default async function PrivacidadPage() {
+  const hotel = await prisma.hotel.findFirst({ select: { name: true, email: true } });
+  const contacto = process.env.PRIVACY_CONTACT_EMAIL?.trim() || hotel?.email || null;
+  const dias = diasDeRetencion();
 
   return (
     <main className="flex-1 bg-zinc-50">
@@ -44,7 +52,8 @@ export default function PrivacidadPage() {
           Roomly es un sistema de reservas de hotel que atiende por WhatsApp: un
           asistente responde consultas, muestra disponibilidad, crea la reserva y
           envía el link de pago. Esta política explica qué datos se tratan al
-          usarlo, para qué y con quién se comparten.
+          usarlo, para qué y con quién se comparten. El responsable de los datos
+          es {hotel?.name ?? "el hotel"}.
         </p>
 
         <Seccion titulo="Qué datos tratamos">
@@ -66,7 +75,8 @@ export default function PrivacidadPage() {
             <li>Generar el link de pago, confirmar la reserva al acreditarse y avisarte por WhatsApp o email.</li>
             <li>
               Diagnosticar fallas del asistente. En esos registros técnicos el
-              teléfono se guarda seudonimizado, no en claro.
+              teléfono se guarda seudonimizado; las conversaciones, en cambio,
+              guardan el número real, porque hace falta para responderte.
             </li>
           </ul>
           <p>No usamos tus datos para publicidad ni los vendemos a terceros.</p>
@@ -93,10 +103,11 @@ export default function PrivacidadPage() {
 
         <Seccion titulo="Cuánto tiempo los guardamos">
           <p>
-            Los datos de reservas y conversaciones se conservan mientras sean
-            necesarios para gestionar tu estadía y cumplir obligaciones legales, o
-            hasta que pidas su eliminación. Los registros técnicos de mensajes
-            recibidos se borran automáticamente a los 7 días.
+            Las conversaciones de WhatsApp y los registros técnicos del asistente
+            se conservan {dias} días y después se borran automáticamente. Los datos
+            de las reservas (titular, fechas, habitación y estado del pago) se
+            conservan mientras el hotel los necesite para gestionar la estadía y
+            cumplir obligaciones legales.
           </p>
         </Seccion>
 
@@ -106,18 +117,21 @@ export default function PrivacidadPage() {
             términos de la Ley 25.326 de Protección de Datos Personales.
           </p>
           <p>
-            Para hacerlo, escribí <strong>&quot;BORRAR MIS DATOS&quot;</strong> (o el pedido que
-            corresponda) al mismo número de WhatsApp con el que reservaste
+            Para hacerlo, enviá un email
             {contacto ? (
               <>
-                , o enviá un email a{" "}
+                {" "}a{" "}
                 <a href={`mailto:${contacto}`} className="text-zinc-900 underline">
                   {contacto}
                 </a>
               </>
-            ) : null}
-            . Si tenés una reserva con pago pendiente o en curso, algunos datos
-            pueden conservarse hasta cerrarla.
+            ) : (
+              <> al hotel</>
+            )}{" "}
+            indicando el número de WhatsApp con el que reservaste. El pedido lo
+            atiende el personal del hotel; el asistente de WhatsApp no procesa estos
+            pedidos. Si tenés una reserva con pago pendiente o en curso, algunos
+            datos pueden conservarse hasta cerrarla.
           </p>
           <p className="text-sm text-zinc-500">
             La Agencia de Acceso a la Información Pública, en su carácter de Órgano

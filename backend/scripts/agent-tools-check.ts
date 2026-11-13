@@ -104,6 +104,14 @@ async function main() {
   );
 
   await probar(
+    "consultar_habitaciones rechaza un ingreso pasado",
+    "consultar_habitaciones",
+    { checkIn: dia(-3), checkOut: dia(-1) },
+    ctx,
+    "error"
+  );
+
+  await probar(
     "consultar_reserva con código inexistente",
     "consultar_reserva",
     { code: "RML-0000" },
@@ -153,7 +161,7 @@ async function main() {
   }
 
   await probar(
-    "modificar_reserva sin campos a cambiar",
+    "modificar_reserva con un id inexistente",
     "modificar_reserva",
     { id: "cualquiera" },
     ctx,

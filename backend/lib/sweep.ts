@@ -21,6 +21,7 @@
 import { prisma } from "./prisma";
 import { reclamarEvento } from "./dedup";
 import { expirePendingPayments } from "@/services/payment.service";
+import { seudonimizarTrazasViejas } from "./retencion";
 
 /** Cada cuánto, como mucho, se permite un barrido oportunista. */
 const VENTANA_MIN = 15;
@@ -48,6 +49,9 @@ export async function barrerSiCorresponde(): Promise<void> {
     if (!meToca) return;
 
     const { confirmadas, vencidas, huerfanas } = await expirePendingPayments();
+    // Las trazas con el teléfono en claro se terminan de seudonimizar con el
+    // tráfico, sin esperar al cron diario.
+    await seudonimizarTrazasViejas();
     if (confirmadas > 0 || vencidas > 0 || huerfanas > 0) {
       console.log(
         `[sweep] oportunista: ${confirmadas} confirmadas por reconciliación, ${vencidas} vencidas, ${huerfanas} huérfanas`

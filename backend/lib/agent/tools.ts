@@ -244,8 +244,38 @@ async function buscarReservaPendiente(
     hotelEmail: reserva.hotel.email,
     hotelPhone: reserva.hotel.phone,
     nights,
+    numGuests: reserva.numGuests,
     yaExistia: true,
   };
+}
+
+/**
+ * Qué cambió entre la reserva pendiente y el pedido repetido.
+ *
+ * La idempotencia reconoce la reserva por teléfono, habitación y fechas, porque
+ * el modelo a veces la crea antes de que el huésped elija la modalidad de pago.
+ * Si en el pedido nuevo cambiaron la modalidad o la cantidad de personas,
+ * devolver la reserva existente cobraría otro monto del que el huésped eligió,
+ * así que se avisa en lugar de devolverla.
+ */
+export function cambiosRespectoDePendiente(
+  existente: { code: string; paymentType: string; numGuests: number },
+  pedido: { paymentType: string; numGuests: number }
+): string | null {
+  const modalidad = (t: string) => (t === "FULL" ? "pago total" : "seña del 15 %");
+  const cambios: string[] = [];
+  if (existente.paymentType !== pedido.paymentType) {
+    cambios.push(`la modalidad de pago (era ${modalidad(existente.paymentType)})`);
+  }
+  if (existente.numGuests !== pedido.numGuests) {
+    cambios.push(`la cantidad de personas (eran ${existente.numGuests})`);
+  }
+  if (cambios.length === 0) return null;
+  return (
+    `Ya existe la reserva ${existente.code}, pendiente de pago, para la misma habitación y fechas, ` +
+    `pero cambió ${cambios.join(" y ")}. Para aplicar el cambio, cancelá esa reserva con ` +
+    `cancelar_reserva y creá una nueva con los datos que eligió el huésped.`
+  );
 }
 
 /**
@@ -338,7 +368,13 @@ const handlers: Record<string, ToolHandler> = {
     // Un pedido repetido con los mismos datos es la MISMA reserva, no otra:
     // devolvemos la que ya existe con su link de pago original.
     const existente = await buscarReservaPendiente(ctx.phone, roomId, checkIn, checkOut);
-    if (existente) return existente;
+    if (existente) {
+      const cambio = cambiosRespectoDePendiente(existente, {
+        paymentType,
+        numGuests: Number(args.numGuests ?? 1),
+      });
+      return cambio ? { error: cambio } : existente;
+    }
 
     // Límite de reservas impagas por teléfono. Cada PENDING_PAYMENT bloquea una
     // habitación hasta 24 h; sin tope, un mismo número (o un loop del modelo)

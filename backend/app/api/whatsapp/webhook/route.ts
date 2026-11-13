@@ -26,6 +26,8 @@ import { resolveHotelId, loadBotConfig } from "@/lib/agent/config";
 import { logInteraction } from "@/services/conversation.service";
 import type { AgentContext } from "@/lib/agent/types";
 import { verifyMetaSignature } from "@/lib/signatures";
+import { conAvisoDePrivacidad } from "@/lib/privacy";
+import { prisma } from "@/lib/prisma";
 
 /** Para avisar una sola vez por instancia que falta el App Secret. */
 let avisoSinSecreto = false;
@@ -157,6 +159,15 @@ async function procesarMensaje(mensaje: MensajeEntrante): Promise<void> {
     timezone: config.timezone,
   };
 
+  // Primer contacto de este número: la primera respuesta lleva el aviso de
+  // privacidad. Se decide antes de correr el agente, porque logInteraction
+  // guarda el turno recién después de responder.
+  const [previos, hotel] = await Promise.all([
+    prisma.message.count({ where: { phone: mensaje.from } }),
+    prisma.hotel.findUnique({ where: { id: hotelId }, select: { name: true } }),
+  ]);
+  const primerContacto = previos === 0;
+
   const resultado = await runAgent(mensaje.text, ctx);
 
   // La traza se guarda pase lo que pase — sobre todo si falló, que es cuando
@@ -174,7 +185,10 @@ async function procesarMensaje(mensaje: MensajeEntrante): Promise<void> {
     return;
   }
 
-  await enviarTexto(mensaje.phoneNumberId, mensaje.from, resultado.text);
+  const respuesta = primerContacto
+    ? conAvisoDePrivacidad(resultado.text, hotel?.name ?? "el hotel")
+    : resultado.text;
+  await enviarTexto(mensaje.phoneNumberId, mensaje.from, respuesta);
 
   // Persistir el turno DESPUÉS de responder, igual que el nodo "Logging de
   // interacción". El orden importa: es lo que lee la memoria del agente en el
@@ -183,7 +197,7 @@ async function procesarMensaje(mensaje: MensajeEntrante): Promise<void> {
   await logInteraction({
     phone: mensaje.from,
     userMessage: mensaje.text,
-    botMessage: resultado.text,
+    botMessage: respuesta,
     channel: "WHATSAPP",
     waTimestamp: mensaje.timestamp,
     hotelId,

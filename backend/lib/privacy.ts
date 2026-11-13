@@ -60,3 +60,19 @@ export function seudonimizarTelefonosEnJson<T>(valor: T, secret = secreto()): T 
   };
   return recorrer(valor) as T;
 }
+
+/** Dirección pública de la política de privacidad. */
+export const URL_PRIVACIDAD = "https://roomly.com.ar/privacidad";
+
+/**
+ * Aviso que recibe el huésped en la primera respuesta del bot: para qué se usan
+ * sus datos, quién es el responsable y dónde está la política. Lo exige el
+ * deber de información de la Ley 25.326 (art. 6) antes de tratar los datos.
+ */
+export function conAvisoDePrivacidad(respuesta: string, hotel: string): string {
+  return (
+    `${respuesta}\n\n` +
+    `_Tus datos (teléfono, mensajes y datos de la reserva) se usan solo para gestionar tu reserva. ` +
+    `Responsable: ${hotel}. Más información y cómo ejercer tus derechos: ${URL_PRIVACIDAD}_`
+  );
+}

@@ -16,7 +16,9 @@ import { extraerMensaje, normalizarDestinatario } from "../lib/channels/whatsapp
 import { verifyMetaSignature, verifyMercadoPagoSignature } from "../lib/signatures";
 import { seudonimizarTelefono, seudonimizarTelefonosEnJson } from "../lib/privacy";
 import { accionTrasReconciliar } from "../services/payment.service";
-import { mismoTelefono } from "../lib/agent/tools";
+import { mismoTelefono, cambiosRespectoDePendiente } from "../lib/agent/tools";
+import { conAvisoDePrivacidad } from "../lib/privacy";
+import { diasDeRetencion, fechaDeCorte } from "../lib/retencion";
 import { violacionDeReglas } from "../services/reservation.service";
 import { mismoSecreto } from "../lib/compare";
 
@@ -222,6 +224,28 @@ check("reglas: huésped alojado extiende la salida",
 check("secreto: igual", mismoSecreto("abc123", "abc123"), true);
 check("secreto: distinto", mismoSecreto("abc124", "abc123"), false);
 check("secreto: sin configurar nunca coincide", mismoSecreto("", ""), false);
+
+// ─── Reserva repetida: modalidad y cantidad de personas ──────────────────────
+
+const pendiente = { code: "RML-4229", paymentType: "DEPOSIT", numGuests: 2 };
+check("repetida: mismos datos devuelve la reserva",
+  cambiosRespectoDePendiente(pendiente, { paymentType: "DEPOSIT", numGuests: 2 }), null);
+check("repetida: cambio a pago total avisa",
+  (cambiosRespectoDePendiente(pendiente, { paymentType: "FULL", numGuests: 2 }) ?? "").includes("modalidad de pago (era seña del 15 %)"), true);
+check("repetida: cambio de personas avisa",
+  (cambiosRespectoDePendiente(pendiente, { paymentType: "DEPOSIT", numGuests: 3 }) ?? "").includes("cantidad de personas (eran 2)"), true);
+
+// ─── Datos personales: aviso y conservación ──────────────────────────────────
+
+const aviso = conAvisoDePrivacidad("Hola", "Hotel Roomly");
+check("aviso: conserva la respuesta y nombra al responsable",
+  aviso.startsWith("Hola") && aviso.includes("Responsable: Hotel Roomly"), true);
+check("aviso: remite a la política", aviso.includes("roomly.com.ar/privacidad"), true);
+check("conservación: 180 días por defecto", diasDeRetencion(undefined), 180);
+check("conservación: valor inválido usa el defecto", diasDeRetencion("abc"), 180);
+check("conservación: respeta RETENCION_DIAS", diasDeRetencion("90"), 90);
+check("conservación: fecha de corte",
+  fechaDeCorte(180, new Date("2026-11-12T00:00:00Z")).toISOString(), "2026-05-16T00:00:00.000Z");
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);
