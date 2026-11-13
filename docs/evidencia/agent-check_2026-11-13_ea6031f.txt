@@ -1,0 +1,276 @@
+﻿
+> backend@0.1.0 agent:check
+> tsx scripts/agent-check.ts
+
+✓ 22:30 ARG del 15-sep (01:30 UTC del 16)
+    esperado: "2026-09-15T22:30:00-03:00"
+    obtenido: "2026-09-15T22:30:00-03:00"
+✓ medianoche ARG
+    esperado: "2026-09-16T00:00:00-03:00"
+    obtenido: "2026-09-16T00:00:00-03:00"
+✓ mediodia ARG
+    esperado: "2026-09-15T12:00:00-03:00"
+    obtenido: "2026-09-15T12:00:00-03:00"
+✓ UTC devuelve +00:00
+    esperado: "2026-09-15T15:00:00+00:00"
+    obtenido: "2026-09-15T15:00:00+00:00"
+✓ Madrid en verano (+02:00)
+    esperado: "2026-07-15T12:00:00+02:00"
+    obtenido: "2026-07-15T12:00:00+02:00"
+✓ round-trip a UTC
+    esperado: "2026-09-16T01:30:00.000Z"
+    obtenido: "2026-09-16T01:30:00.000Z"
+✓ no quedan placeholders sin resolver
+    esperado: false
+    obtenido: false
+✓ interpola el telefono
+    esperado: true
+    obtenido: true
+✓ interpola la fecha local
+    esperado: true
+    obtenido: true
+✓ conserva las reglas del prompt de n8n
+    esperado: true
+    obtenido: true
+✓ el prompt prohibe el doble asterisco
+    esperado: true
+    obtenido: true
+✓ el prompt da el ejemplo de lista sin viñetas
+    esperado: true
+    obtenido: true
+✓ descarta turnos del modelo al inicio
+    esperado: ["user","model"]
+    obtenido: ["user","model"]
+✓ deja intacto un historial que ya abre en user
+    esperado: ["user","model"]
+    obtenido: ["user","model"]
+✓ historial todo-modelo queda vacio
+    esperado: []
+    obtenido: []
+✓ historial vacio
+    esperado: []
+    obtenido: []
+✓ extrae un mensaje de texto
+    esperado: {"messageId":"wamid.ABC","phoneNumberId":"123456789","from":"5493510000000","text":"hola","timestamp":"1755880000"}
+    obtenido: {"messageId":"wamid.ABC","phoneNumberId":"123456789","from":"5493510000000","text":"hola","timestamp":"1755880000"}
+✓ acepta el payload envuelto en body
+    esperado: "hola"
+    obtenido: "hola"
+✓ ignora los avisos de estado (statuses)
+    esperado: null
+    obtenido: null
+✓ ignora mensajes que no son texto (audio, imagen)
+    esperado: null
+    obtenido: null
+✓ ignora un texto vacio
+    esperado: null
+    obtenido: null
+✓ tolera un payload sin forma conocida
+    esperado: null
+    obtenido: null
+✓ tolera null
+    esperado: null
+    obtenido: null
+✓ saca el 9 de los moviles argentinos
+    esperado: "543510000000"
+    obtenido: "543510000000"
+✓ no toca un fijo argentino
+    esperado: "543510000000"
+    obtenido: "543510000000"
+✓ no toca numeros de otros paises
+    esperado: "341112345678"
+    obtenido: "341112345678"
+✓ Meta: el cuerpo de prueba trae el escape literal
+    esperado: 80
+    obtenido: 80
+✓ Meta: firma válida sobre el cuerpo crudo
+    esperado: true
+    obtenido: true
+✓ Meta: rechaza con otro App Secret
+    esperado: false
+    obtenido: false
+✓ Meta: rechaza el JSON re-serializado (é sin escapar)
+    esperado: false
+    obtenido: false
+✓ Meta: rechaza sin header
+    esperado: false
+    obtenido: false
+✓ Meta: rechaza sin prefijo sha256=
+    esperado: false
+    obtenido: false
+✓ Mercado Pago: firma válida
+    esperado: true
+    obtenido: true
+✓ Mercado Pago: tolera espacios y orden inverso en el header
+    esperado: true
+    obtenido: true
+✓ Mercado Pago: rechaza otro data.id
+    esperado: false
+    obtenido: false
+✓ Mercado Pago: data.id alfanumérico va en minúsculas
+    esperado: true
+    obtenido: true
+✓ Mercado Pago: rechaza header incompleto
+    esperado: false
+    obtenido: false
+✓ teléfono: HMAC truncado con prefijo h:
+    esperado: "h:8d119c5288b904e8"
+    obtenido: "h:8d119c5288b904e8"
+✓ teléfono: estable para el mismo número
+    esperado: true
+    obtenido: true
+✓ teléfono: distinto con otra clave
+    esperado: false
+    obtenido: false
+✓ teléfono: no seudonimiza dos veces
+    esperado: "h:8d119c5288b904e8"
+    obtenido: "h:8d119c5288b904e8"
+✓ steps: seudonimiza guestPhone anidado
+    esperado: "h:8d119c5288b904e8"
+    obtenido: "h:8d119c5288b904e8"
+✓ steps: conserva el teléfono público del hotel
+    esperado: "2614000000"
+    obtenido: "2614000000"
+✓ steps: no modifica el original
+    esperado: "5493510000000"
+    obtenido: "5493510000000"
+✓ pago aprobado encontrado → confirma
+    esperado: "CONFIRMADA"
+    obtenido: "CONFIRMADA"
+✓ vigente sin pago → espera
+    esperado: "ESPERAR"
+    obtenido: "ESPERAR"
+✓ vencido y MP dice que no hay pago → cancela
+    esperado: "EXPIRAR"
+    obtenido: "EXPIRAR"
+✓ vencido pero MP no respondió → NO cancela
+    esperado: "ESPERAR"
+    obtenido: "ESPERAR"
+✓ vencido y confirmándose en paralelo → NO cancela
+    esperado: "ESPERAR"
+    obtenido: "ESPERAR"
+✓ vencido hace 2 días y MP sigue sin responder → cancela
+    esperado: "EXPIRAR"
+    obtenido: "EXPIRAR"
+✓ vencido hace 2 días pero confirmándose → NO cancela
+    esperado: "ESPERAR"
+    obtenido: "ESPERAR"
+✓ pago ya no pendiente → no hace nada
+    esperado: "ESPERAR"
+    obtenido: "ESPERAR"
+✓ titular: mismo número con + y espacios
+    esperado: true
+    obtenido: true
+✓ titular: otro número
+    esperado: false
+    obtenido: false
+✓ titular: teléfono vacío nunca coincide
+    esperado: false
+    obtenido: false
+✓ reglas: reserva válida
+    esperado: null
+    obtenido: null
+✓ reglas: más personas que la capacidad
+    esperado: "La habitación admite hasta 2 personas y la reserva es para 5."
+    obtenido: "La habitación admite hasta 2 personas y la reserva es para 5."
+✓ reglas: por debajo de la estadía mínima
+    esperado: "La estadía mínima para esta habitación es de 3 noches."
+    obtenido: "La estadía mínima para esta habitación es de 3 noches."
+✓ reglas: ingreso en el pasado (p. ej. «el viernes» mal resuelto)
+    esperado: "La fecha de ingreso (2026-10-30) ya pasó: hoy es 2026-11-03."
+    obtenido: "La fecha de ingreso (2026-10-30) ya pasó: hoy es 2026-11-03."
+✓ reglas: ingreso hoy se acepta
+    esperado: null
+    obtenido: null
+✓ reglas: huésped alojado extiende la salida
+    esperado: null
+    obtenido: null
+✓ secreto: igual
+    esperado: true
+    obtenido: true
+✓ secreto: distinto
+    esperado: false
+    obtenido: false
+✓ secreto: sin configurar nunca coincide
+    esperado: false
+    obtenido: false
+✓ repetida: mismos datos devuelve la reserva
+    esperado: null
+    obtenido: null
+✓ repetida: cambio a pago total avisa
+    esperado: true
+    obtenido: true
+✓ repetida: cambio de personas avisa
+    esperado: true
+    obtenido: true
+✓ aviso: conserva la respuesta y nombra al responsable
+    esperado: true
+    obtenido: true
+✓ aviso: remite a la política
+    esperado: true
+    obtenido: true
+✓ conservación: 180 días por defecto
+    esperado: 180
+    obtenido: 180
+✓ conservación: valor inválido usa el defecto
+    esperado: 180
+    obtenido: 180
+✓ conservación: respeta RETENCION_DIAS
+    esperado: 90
+    obtenido: 90
+✓ conservación: fecha de corte
+    esperado: "2026-05-16T00:00:00.000Z"
+    obtenido: "2026-05-16T00:00:00.000Z"
+✓ confirmar: sin propuesta no crea
+    esperado: true
+    obtenido: true
+✓ confirmar: propuesta del mismo turno no crea
+    esperado: true
+    obtenido: true
+✓ confirmar: propuesta de un turno anterior crea (nombre sin tildes ni mayúsculas)
+    esperado: null
+    obtenido: null
+✓ confirmar: cambio de modalidad no crea
+    esperado: true
+    obtenido: true
+✓ confirmar: cambio de fechas no crea
+    esperado: true
+    obtenido: true
+✓ confirmar: propuesta vencida (más de 2 h) no crea
+    esperado: true
+    obtenido: true
+✓ precio: seña del 15 %
+    esperado: 7500
+    obtenido: 7500
+✓ precio: pago total
+    esperado: 50000
+    obtenido: 50000
+✓ modificar: con seña, el saldo en el hotel sigue al total
+    esperado: {"saldoEnHotel":67500,"aDevolver":0}
+    obtenido: {"saldoEnHotel":67500,"aDevolver":0}
+✓ modificar: pago total y estadía más larga, diferencia en el hotel
+    esperado: {"saldoEnHotel":25000,"aDevolver":0}
+    obtenido: {"saldoEnHotel":25000,"aDevolver":0}
+✓ modificar: pago total y estadía más corta, devolución
+    esperado: {"saldoEnHotel":0,"aDevolver":25000}
+    obtenido: {"saldoEnHotel":0,"aDevolver":25000}
+✓ estado: ingreso el día de llegada
+    esperado: {"estado":"CHECKED_IN"}
+    obtenido: {"estado":"CHECKED_IN"}
+✓ estado: ingreso antes del día de llegada se rechaza
+    esperado: true
+    obtenido: true
+✓ estado: no presentación desde el día de llegada
+    esperado: {"estado":"NO_SHOW"}
+    obtenido: {"estado":"NO_SHOW"}
+✓ estado: una reserva impaga no registra ingreso
+    esperado: true
+    obtenido: true
+✓ estado: cierre con el huésped alojado
+    esperado: {"estado":"CHECKED_OUT"}
+    obtenido: {"estado":"CHECKED_OUT"}
+✓ estado: una cancelada no se cierra
+    esperado: true
+    obtenido: true
+
+Todo OK

@@ -1,0 +1,193 @@
+{
+ "descripcion": "Prueba por WhatsApp de proponer/confirmar, precio al modificar y cancelación (iteración 10). Nombre del huésped reemplazado por [nombre]; teléfono seudonimizado.",
+ "ejecuciones": [
+  {
+   "at": "2026-11-13T01:40:20.772Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 2144,
+   "huesped": "hola, quiero reservar del 10 al 12 de diciembre para 2 personas",
+   "bot": "¡Hola! Para el 10/12 al 12/12 tengo disponibilidad en las siguientes habitaciones:\n\n*Hab. 101, 102, 103, 201, 202* – Standard – $15.000/noche (hasta 2 personas)\n*Hab. 301, 302* – Suite – $28.000/noche (hasta 4 personas)\n\n¿Cuál te gustaría reservar? Y por favor, pasame el nombre completo del huésped.",
+   "herramientas": [
+    {
+     "name": "consultar_habitaciones",
+     "ok": true,
+     "args": {
+      "checkIn": "2026-12-10",
+      "checkOut": "2026-12-12"
+     }
+    }
+   ]
+  },
+  {
+   "at": "2026-11-13T01:40:38.763Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 1121,
+   "huesped": "la 101",
+   "bot": "Excelente elección. La *Hab. 101* para 2 noches (del 10/12 al 12/12) tiene un costo total de $30.000.\n\n¿Me pasás el nombre completo del huésped? Y también, ¿querés pagar una seña del 15% ($4.500) o el total ($30.000)?",
+   "herramientas": []
+  },
+  {
+   "at": "2026-11-13T01:41:14.708Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 1083,
+   "huesped": "a nombre de [nombre]",
+   "bot": "Perfecto, [nombre]. ¿Querés pagar una seña del 15% ($4.500) o el total ($30.000)?\n\nY antes de avanzar, ¿me pasás un email? Te mando la confirmación con un código QR para mostrar al llegar. Es opcional.",
+   "herramientas": []
+  },
+  {
+   "at": "2026-11-13T01:41:53.667Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 2930,
+   "huesped": "seña",
+   "bot": "[nombre], te paso el resumen de la reserva:\n\nNombre: [nombre]\nHabitación: 101\nIngreso: 10/12/2026\nEgreso: 12/12/2026\nPersonas: 2\nTotal: $30.000\nMonto a pagar (seña 15%): $4.500\n\n¿Confirmo la reserva con estos datos?",
+   "herramientas": [
+    {
+     "name": "proponer_reserva",
+     "ok": true,
+     "args": {
+      "roomId": "101",
+      "checkIn": "2026-12-10",
+      "checkOut": "2026-12-12",
+      "guestName": "[nombre]",
+      "numGuests": 2,
+      "paymentType": "DEPOSIT"
+     }
+    }
+   ]
+  },
+  {
+   "at": "2026-11-13T01:42:20.889Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 6599,
+   "huesped": "si, confirmo",
+   "bot": "📋 Reserva *RML-8621* lista para confirmar.\nPara reservar tu lugar, realizá el pago de *$4.500* en el siguiente link:\n👉 https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=3442108057-10ffd098-44d8-4a00-a900-014834eef5e6\nTenés *24 horas* para completar el pago. Pasado ese tiempo la reserva se cancela automáticamente.\n⚠️ Si necesitás una devolución, comunicate con el hotel:\n📧 recepcion@roomly.ar\n📞 +54 261 000-0000\nCuando hayas completado el pago, avisame acá y verifico que todo esté en orden. 👌",
+   "herramientas": [
+    {
+     "name": "crear_reserva",
+     "ok": true,
+     "args": {
+      "roomId": "101",
+      "checkIn": "2026-12-10",
+      "checkOut": "2026-12-12",
+      "guestName": "[nombre]",
+      "numGuests": 2,
+      "paymentType": "DEPOSIT"
+     }
+    }
+   ]
+  },
+  {
+   "at": "2026-11-13T01:42:52.695Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 7919,
+   "huesped": "cambiá la salida al 13, es la RML-8621",
+   "bot": "Listo, [nombre]. He modificado tu reserva *RML-8621*. La nueva fecha de salida es el 13/12/2026.\n\nEl nuevo total es de $45.000 y el monto de la seña (15%) es de $6.750. Por favor, utilizá este nuevo link para realizar el pago, ya que el anterior quedó sin efecto:\n\n👉 https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=3442108057-71632cba-66af-427b-adb9-3281eabc742b\n\nTenés 24 horas para completar el pago. ¡Avisame cuando lo hayas hecho!",
+   "herramientas": [
+    {
+     "name": "consultar_reserva",
+     "ok": true,
+     "args": {
+      "code": "RML-8621"
+     }
+    },
+    {
+     "name": "modificar_reserva",
+     "ok": true,
+     "args": {
+      "id": "cmwebai5w000m08lbbau1pbos",
+      "checkOut": "2026-12-13"
+     }
+    }
+   ]
+  },
+  {
+   "at": "2026-11-13T01:43:21.587Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 9327,
+   "huesped": "cancelala",
+   "bot": "¿Confirmás que querés cancelar la reserva *RML-8621* a nombre de [nombre] para la habitación 101 (del 10/12/2026 al 13/12/2026)? Una vez que me des el OK, procedo con la cancelación.",
+   "herramientas": [
+    {
+     "name": "consultar_reserva",
+     "ok": true,
+     "args": {
+      "code": "RML-8621"
+     }
+    }
+   ]
+  },
+  {
+   "at": "2026-11-13T01:43:34.130Z",
+   "telefono": "h:183e02169459ac97",
+   "status": "OK",
+   "modelo": "gemini-3.1-flash-lite",
+   "durationMs": 4585,
+   "huesped": "si",
+   "bot": "Listo, [nombre]. La reserva *RML-8621* ha sido cancelada correctamente. ¿Necesitás ayuda con algo más?",
+   "herramientas": [
+    {
+     "name": "consultar_reserva",
+     "ok": true,
+     "args": {
+      "code": "RML-8621"
+     }
+    },
+    {
+     "name": "cancelar_reserva",
+     "ok": true,
+     "args": {
+      "id": "cmwebai5w000m08lbbau1pbos"
+     }
+    }
+   ]
+  }
+ ],
+ "reserva": {
+  "code": "RML-8621",
+  "status": "CANCELLED",
+  "checkIn": "2026-12-10T00:00:00.000Z",
+  "checkOut": "2026-12-13T00:00:00.000Z",
+  "totalPrice": "45000",
+  "payment": {
+   "amount": "6750",
+   "paymentType": "DEPOSIT",
+   "status": "PENDING"
+  },
+  "auditLogs": [
+   {
+    "action": "CREATED",
+    "performedBy": "bot",
+    "createdAt": "2026-11-13T01:42:17.676Z"
+   },
+   {
+    "action": "MODIFIED",
+    "performedBy": "bot",
+    "createdAt": "2026-11-13T01:42:49.198Z"
+   },
+   {
+    "action": "PAYMENT_LINK_UPDATED",
+    "performedBy": "system",
+    "createdAt": "2026-11-13T01:42:51.317Z"
+   },
+   {
+    "action": "CANCELLED",
+    "performedBy": "bot",
+    "createdAt": "2026-11-13T01:43:32.752Z"
+   }
+  ]
+ }
+}
