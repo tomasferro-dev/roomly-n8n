@@ -5,6 +5,7 @@ import { scheduleHousekeeping } from "./reservation.service";
 import { enviarTexto } from "@/lib/channels/whatsapp";
 import { enviarConfirmacionReserva } from "@/lib/email";
 import { reclamarEvento } from "@/lib/dedup";
+import { precioDeEstadia, montoAPagar } from "./pricing.service";
 
 /**
  * URL pública, sin barra al final.
@@ -36,56 +37,26 @@ export async function createPaymentPreference(
   const reservation = await prisma.reservation.findUniqueOrThrow({
     where: { id: reservationId },
     include: {
-      room:     { select: { number: true, typeId: true } },
-      ratePlan: { select: { pricePerNight: true } },
+      room:     { select: { number: true } },
       hotel:    { select: { name: true, email: true, phone: true } },
     },
   });
 
-  // Precio: usar el ratePlan de la reserva si existe,
-  // sino buscar el plan vigente del tipo de habitación.
-  let pricePerNight: number;
-  if (reservation.ratePlan) {
-    pricePerNight = Number(reservation.ratePlan.pricePerNight);
-  } else {
-    const plan = await prisma.ratePlan.findFirst({
-      where: { typeId: reservation.room.typeId },
-      orderBy: { validFrom: "desc" },
-      select: { pricePerNight: true },
-    });
-    if (!plan) {
-      throw new Error("No hay tarifa configurada para esta habitación.");
-    }
-    pricePerNight = Number(plan.pricePerNight);
-  }
-
-  const nights = Math.round(
-    (reservation.checkOut.getTime() - reservation.checkIn.getTime()) / 86400000
+  const { totalPrice } = await precioDeEstadia(
+    reservation.roomId, reservation.checkIn, reservation.checkOut, reservation.ratePlanId
   );
-  const totalPrice  = pricePerNight * nights;
-  const payAmount   = paymentType === "DEPOSIT" ? Math.round(totalPrice * 0.15) : totalPrice;
+  const payAmount   = montoAPagar(totalPrice, paymentType);
   const expiresAt   = new Date(Date.now() + 24 * 60 * 60 * 1000); // +24 h
 
-  const preference = new Preference(mpClient);
-  const mpResponse = await preference.create({
-    body: {
-      items: [
-        {
-          id:         reservation.id,
-          title:      `${paymentType === "DEPOSIT" ? "Seña (15%)" : "Pago total"} – ${reservation.hotel.name} · Hab. ${reservation.room.number} · ${reservation.code}`,
-          quantity:   1,
-          unit_price: payAmount,
-          currency_id: "ARS",
-        },
-      ],
-      external_reference: reservation.id,
-      notification_url:   `${BACKEND_URL}/api/v1/payments/webhook`,
-      // La preferencia expira en 24 h (igual que el deadline de la reserva)
-      expires:                true,
-      expiration_date_from:   new Date().toISOString(),
-      expiration_date_to:     expiresAt.toISOString(),
-    },
+  const mpResponse = await crearPreferencia({
+    reservationId: reservation.id,
+    titulo: `${paymentType === "DEPOSIT" ? "Seña (15%)" : "Pago total"} – ${reservation.hotel.name} · Hab. ${reservation.room.number} · ${reservation.code}`,
+    monto: payAmount,
+    expiresAt,
   });
+
+  // El total queda en la reserva: es lo que se recalcula al modificarla.
+  await prisma.reservation.update({ where: { id: reservation.id }, data: { totalPrice } });
 
   // Guardar el pago en la DB
   await prisma.payment.create({
@@ -114,6 +85,106 @@ export async function createPaymentPreference(
     expiresAt,
     hotelEmail:  reservation.hotel.email,
     hotelPhone:  reservation.hotel.phone,
+  };
+}
+
+/** Preferencia de checkout de MP que vence junto con el plazo de la reserva. */
+async function crearPreferencia(p: {
+  reservationId: string;
+  titulo: string;
+  monto: number;
+  expiresAt: Date;
+}) {
+  return new Preference(mpClient).create({
+    body: {
+      items: [
+        {
+          id:          p.reservationId,
+          title:       p.titulo,
+          quantity:    1,
+          unit_price:  p.monto,
+          currency_id: "ARS",
+        },
+      ],
+      external_reference: p.reservationId,
+      notification_url:   `${BACKEND_URL}/api/v1/payments/webhook`,
+      expires:              true,
+      expiration_date_from: new Date().toISOString(),
+      expiration_date_to:   p.expiresAt.toISOString(),
+    },
+  });
+}
+
+/**
+ * Rehace el link de pago de una reserva pendiente cuyo total cambió.
+ *
+ * Sin esto, al modificar las fechas de una reserva impaga el huésped seguía
+ * recibiendo el link con el monto anterior. La preferencia nueva conserva el
+ * vencimiento original (modificar no extiende el plazo de 24 h) y la vieja se
+ * da por vencida en MP para que nadie pague el monto anterior. Si MP no deja
+ * vencerla, queda registrado: el webhook identifica el pago por la reserva,
+ * no por la preferencia.
+ *
+ * Devuelve null si la reserva no tiene un pago pendiente vigente.
+ */
+export async function rehacerPreferencia(reservationId: string) {
+  const reservation = await prisma.reservation.findUniqueOrThrow({
+    where: { id: reservationId },
+    include: {
+      payment: true,
+      room:    { select: { number: true } },
+      hotel:   { select: { name: true } },
+    },
+  });
+  const pago = reservation.payment;
+  if (!pago || pago.status !== "PENDING" || pago.expiresAt <= new Date()) return null;
+
+  const { totalPrice } = await precioDeEstadia(
+    reservation.roomId, reservation.checkIn, reservation.checkOut, reservation.ratePlanId
+  );
+  const payAmount = montoAPagar(totalPrice, pago.paymentType);
+
+  const mpResponse = await crearPreferencia({
+    reservationId,
+    titulo: `${pago.paymentType === "DEPOSIT" ? "Seña (15%)" : "Pago total"} – ${reservation.hotel.name} · Hab. ${reservation.room.number} · ${reservation.code}`,
+    monto: payAmount,
+    expiresAt: pago.expiresAt,
+  });
+
+  if (pago.mpPreferenceId) {
+    try {
+      await new Preference(mpClient).update({
+        id: pago.mpPreferenceId,
+        // La API acepta una actualización parcial; el tipo del SDK exige items.
+        updatePreferenceRequest: { expires: true, expiration_date_to: new Date().toISOString() } as never,
+      });
+    } catch (err) {
+      console.warn(`[pagos] no se pudo vencer la preferencia anterior de ${reservation.code}:`, err);
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { reservationId },
+      data: { amount: payAmount, mpPreferenceId: mpResponse.id ?? undefined },
+    });
+    await tx.auditLog.create({
+      data: {
+        reservationId,
+        action: "PAYMENT_LINK_UPDATED",
+        before: { amount: Number(pago.amount), mpPreferenceId: pago.mpPreferenceId } as object,
+        after: { amount: payAmount, mpPreferenceId: mpResponse.id, totalPrice } as object,
+        performedBy: "system",
+      },
+    });
+  });
+
+  return {
+    paymentUrl: mpResponse.init_point!,
+    payAmount,
+    totalPrice,
+    paymentType: pago.paymentType,
+    expiresAt: pago.expiresAt,
   };
 }
 

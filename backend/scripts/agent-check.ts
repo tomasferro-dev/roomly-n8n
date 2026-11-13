@@ -19,7 +19,9 @@ import { accionTrasReconciliar } from "../services/payment.service";
 import { mismoTelefono, cambiosRespectoDePendiente } from "../lib/agent/tools";
 import { conAvisoDePrivacidad } from "../lib/privacy";
 import { diasDeRetencion, fechaDeCorte } from "../lib/retencion";
-import { violacionDeReglas } from "../services/reservation.service";
+import { violacionDeReglas, transicionDeEstado } from "../services/reservation.service";
+import { verificarConfirmacion, type Propuesta } from "../lib/agent/propuesta";
+import { montoAPagar, saldoTrasModificacion } from "../services/pricing.service";
 import { mismoSecreto } from "../lib/compare";
 
 const TZ = "America/Argentina/Buenos_Aires";
@@ -246,6 +248,54 @@ check("conservación: valor inválido usa el defecto", diasDeRetencion("abc"), 1
 check("conservación: respeta RETENCION_DIAS", diasDeRetencion("90"), 90);
 check("conservación: fecha de corte",
   fechaDeCorte(180, new Date("2026-11-12T00:00:00Z")).toISOString(), "2026-05-16T00:00:00.000Z");
+
+// ─── Iteración 10: proponer y confirmar ──────────────────────────────────────
+
+const t0 = new Date("2026-11-13T15:00:00Z");
+const despues = (min: number) => new Date(t0.getTime() + min * 60000);
+const propuesta: Propuesta = {
+  roomId: "hab101", roomNumber: "101", guestName: "Ana Pérez", checkIn: "2026-12-04", checkOut: "2026-12-06",
+  numGuests: 2, paymentType: "DEPOSIT", totalPrice: 50000, payAmount: 7500, at: t0.toISOString(),
+};
+const pedido = { roomId: "hab101", guestName: "ana perez", checkIn: "2026-12-04", checkOut: "2026-12-06", numGuests: 2, paymentType: "DEPOSIT" };
+check("confirmar: sin propuesta no crea",
+  (verificarConfirmacion(null, pedido, despues(1), despues(1)) ?? "").includes("proponer_reserva"), true);
+check("confirmar: propuesta del mismo turno no crea",
+  (verificarConfirmacion(propuesta, pedido, despues(-1), despues(0)) ?? "").includes("todavía no vio"), true);
+check("confirmar: propuesta de un turno anterior crea (nombre sin tildes ni mayúsculas)",
+  verificarConfirmacion(propuesta, pedido, despues(2), despues(2)), null);
+check("confirmar: cambio de modalidad no crea",
+  (verificarConfirmacion(propuesta, { ...pedido, paymentType: "FULL" }, despues(2), despues(2)) ?? "").includes("la modalidad de pago"), true);
+check("confirmar: cambio de fechas no crea",
+  (verificarConfirmacion(propuesta, { ...pedido, checkOut: "2026-12-07" }, despues(2), despues(2)) ?? "").includes("las fechas"), true);
+check("confirmar: propuesta vencida (más de 2 h) no crea",
+  (verificarConfirmacion(propuesta, pedido, despues(121), despues(121)) ?? "").includes("venció"), true);
+
+// ─── Iteración 10: precio al modificar ────────────────────────────────────────
+
+check("precio: seña del 15 %", montoAPagar(50000, "DEPOSIT"), 7500);
+check("precio: pago total", montoAPagar(50000, "FULL"), 50000);
+check("modificar: con seña, el saldo en el hotel sigue al total",
+  saldoTrasModificacion(75000, 7500, "DEPOSIT"), { saldoEnHotel: 67500, aDevolver: 0 });
+check("modificar: pago total y estadía más larga, diferencia en el hotel",
+  saldoTrasModificacion(75000, 50000, "FULL"), { saldoEnHotel: 25000, aDevolver: 0 });
+check("modificar: pago total y estadía más corta, devolución",
+  saldoTrasModificacion(25000, 50000, "FULL"), { saldoEnHotel: 0, aDevolver: 25000 });
+
+// ─── Iteración 10: estados desde el panel ─────────────────────────────────────
+
+check("estado: ingreso el día de llegada",
+  transicionDeEstado("CONFIRMED", "CHECK_IN", "2026-12-04", "2026-12-04"), { estado: "CHECKED_IN" });
+check("estado: ingreso antes del día de llegada se rechaza",
+  "error" in transicionDeEstado("CONFIRMED", "CHECK_IN", "2026-12-04", "2026-12-03"), true);
+check("estado: no presentación desde el día de llegada",
+  transicionDeEstado("CONFIRMED", "NO_SHOW", "2026-12-04", "2026-12-05"), { estado: "NO_SHOW" });
+check("estado: una reserva impaga no registra ingreso",
+  "error" in transicionDeEstado("PENDING_PAYMENT", "CHECK_IN", "2026-12-04", "2026-12-04"), true);
+check("estado: cierre con el huésped alojado",
+  transicionDeEstado("CHECKED_IN", "CHECK_OUT", "2026-12-04", "2026-12-06"), { estado: "CHECKED_OUT" });
+check("estado: una cancelada no se cierra",
+  "error" in transicionDeEstado("CANCELLED", "CHECK_OUT", "2026-12-04", "2026-12-06"), true);
 
 console.log(fail === 0 ? "\nTodo OK" : `\n${fail} fallo(s)`);
 process.exit(fail === 0 ? 0 : 1);

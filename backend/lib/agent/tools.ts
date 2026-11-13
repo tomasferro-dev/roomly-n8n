@@ -1,9 +1,11 @@
 /**
- * Las cinco herramientas del agente.
+ * Las seis herramientas del agente.
  *
- * Son el equivalente exacto de los nodos `toolHttpRequest` del workflow de n8n
+ * Cinco son el equivalente de los nodos `toolHttpRequest` del workflow de n8n
  * (consultar_habitaciones, crear_reserva, consultar_reserva, modificar_reserva,
- * cancelar_reserva), con dos diferencias:
+ * cancelar_reserva). La sexta, proponer_reserva (iteración 10), separa la
+ * propuesta de la creación: ver propuesta.ts. Respecto de n8n hay dos
+ * diferencias más:
  *
  *  1. No viajan por HTTP. n8n llamaba a `/api/v1/...` del propio backend con el
  *     secreto compartido en la query string (`&_s=...`), lo que dejaba el
@@ -29,8 +31,13 @@ import {
   findReservationByCode,
   hoyEnZona,
   ReglaDeReservaError,
+  reglasDeHabitacion,
+  violacionDeReglas,
 } from "@/services/reservation.service";
-import { createPaymentPreference, reconciliarPago } from "@/services/payment.service";
+import { isRoomAvailable } from "@/services/availability.service";
+import { createPaymentPreference, reconciliarPago, rehacerPreferencia } from "@/services/payment.service";
+import { precioDeEstadia, montoAPagar, saldoTrasModificacion } from "@/services/pricing.service";
+import { guardarPropuesta, leerPropuesta, borrarPropuesta, verificarConfirmacion } from "./propuesta";
 import { CreateReservationSchema, UpdateReservationSchema } from "@/lib/validations";
 import type { AgentContext, ToolHandler } from "./types";
 
@@ -54,9 +61,9 @@ export const functionDeclarations: FunctionDeclaration[] = [
     },
   },
   {
-    name: "crear_reserva",
+    name: "proponer_reserva",
     description:
-      "Crea una nueva reserva con link de pago de Mercado Pago. Requiere roomId, guestName, checkIn, checkOut, numGuests y paymentType. guestEmail es opcional. Devuelve code, paymentUrl, payAmount, expiresAt, hotelEmail y hotelPhone.",
+      "Valida una reserva (capacidad, estadía mínima, disponibilidad) y calcula el precio, SIN crearla. Llamarla cuando ya tenés todos los datos y la modalidad de pago. Devuelve un resumen que tenés que mostrarle al huésped para que lo confirme.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -69,6 +76,34 @@ export const functionDeclarations: FunctionDeclaration[] = [
           type: Type.STRING,
           description:
             "Email del huésped, para mandarle la confirmación con el QR. OPCIONAL: omitir si no lo quiso dar.",
+        },
+        checkIn: { type: Type.STRING, description: "Fecha check-in YYYY-MM-DD" },
+        checkOut: { type: Type.STRING, description: "Fecha check-out YYYY-MM-DD" },
+        numGuests: { type: Type.NUMBER, description: "Cantidad de personas (número entero)" },
+        paymentType: {
+          type: Type.STRING,
+          enum: ["DEPOSIT", "FULL"],
+          description: "DEPOSIT para seña del 15%, FULL para pago total completo",
+        },
+      },
+      required: ["roomId", "guestName", "checkIn", "checkOut", "numGuests", "paymentType"],
+    },
+  },
+  {
+    name: "crear_reserva",
+    description:
+      "Crea la reserva que el huésped YA CONFIRMÓ, con link de pago de Mercado Pago. Sólo funciona con los mismos datos de un proponer_reserva cuyo resumen el huésped vio y aceptó en un mensaje posterior. Devuelve code, paymentUrl, payAmount, expiresAt, hotelEmail y hotelPhone.",
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        roomId: {
+          type: Type.STRING,
+          description: "ID de la habitación (el mismo de proponer_reserva)",
+        },
+        guestName: { type: Type.STRING, description: "Nombre completo del huésped" },
+        guestEmail: {
+          type: Type.STRING,
+          description: "Email del huésped. OPCIONAL: omitir si no lo quiso dar.",
         },
         checkIn: { type: Type.STRING, description: "Fecha check-in YYYY-MM-DD" },
         checkOut: { type: Type.STRING, description: "Fecha check-out YYYY-MM-DD" },
@@ -274,7 +309,7 @@ export function cambiosRespectoDePendiente(
   return (
     `Ya existe la reserva ${existente.code}, pendiente de pago, para la misma habitación y fechas, ` +
     `pero cambió ${cambios.join(" y ")}. Para aplicar el cambio, cancelá esa reserva con ` +
-    `cancelar_reserva y creá una nueva con los datos que eligió el huésped.`
+    `cancelar_reserva y proponé una nueva con proponer_reserva con los datos que eligió el huésped.`
   );
 }
 
@@ -301,6 +336,51 @@ async function contarPendientesVigentes(phone: string, hotelId: string): Promise
       ],
     },
   });
+}
+
+/**
+ * Datos de una reserva nueva tal como los manda el modelo, ya normalizados.
+ * Comparten formato proponer_reserva y crear_reserva, para que la propuesta y
+ * la creación se puedan comparar campo por campo.
+ */
+async function leerDatosDeReserva(args: Record<string, unknown>, ctx: AgentContext) {
+  const roomIdRaw = str(args.roomId);
+  const guestName = str(args.guestName);
+  const checkIn = str(args.checkIn);
+  const checkOut = str(args.checkOut);
+  const paymentTypeRaw = str(args.paymentType);
+
+  if (!roomIdRaw || !guestName || !checkIn || !checkOut) {
+    return { error: "Faltan datos: roomId, guestName, checkIn y checkOut son obligatorios." } as const;
+  }
+  const paymentType: "DEPOSIT" | "FULL" | undefined =
+    paymentTypeRaw === "DEPOSIT" || paymentTypeRaw === "FULL" ? paymentTypeRaw : undefined;
+  if (!paymentType) {
+    return { error: "paymentType debe ser 'DEPOSIT' (seña 15%) o 'FULL' (pago total)." } as const;
+  }
+  const numGuests = Number(args.numGuests ?? 1);
+  if (!Number.isInteger(numGuests) || numGuests < 1) {
+    return { error: "numGuests debe ser un número entero mayor que cero." } as const;
+  }
+
+  // El email es opcional y secundario. Si el modelo manda algo que no parece
+  // un email, se descarta en silencio en vez de hacer fallar la reserva: el
+  // huésped puede corregirlo después y el canal principal sigue siendo
+  // WhatsApp.
+  const emailRaw = str(args.guestEmail);
+  const guestEmail = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailRaw)
+    ? emailRaw.toLowerCase()
+    : undefined;
+
+  return {
+    roomId: await resolveRoomId(roomIdRaw, ctx.hotelId),
+    guestName,
+    guestEmail,
+    checkIn,
+    checkOut,
+    numGuests,
+    paymentType,
+  };
 }
 
 // ─── Handlers ─────────────────────────────────────────────────────────────────
@@ -331,33 +411,67 @@ const handlers: Record<string, ToolHandler> = {
     return { rooms };
   },
 
+  async proponer_reserva(args, ctx) {
+    const datos = await leerDatosDeReserva(args, ctx);
+    if ("error" in datos) return datos;
+    const { roomId, guestName, guestEmail, checkIn, checkOut, numGuests, paymentType } = datos;
+
+    const room = await prisma.room.findFirst({
+      where: { id: roomId, hotelId: ctx.hotelId },
+      select: { number: true },
+    });
+    if (!room) return { error: "Esa habitación no existe. Usá el id que devuelve consultar_habitaciones." };
+
+    // Las mismas reglas que aplica createReservation, para no proponerle al
+    // huésped algo que después no se va a poder crear.
+    const reglas = await reglasDeHabitacion(roomId);
+    const violacion = violacionDeReglas({ checkIn, checkOut, numGuests, ...reglas, validarIngreso: true });
+    if (violacion) return { error: violacion };
+    if (!(await isRoomAvailable(roomId, checkIn, checkOut))) {
+      return { error: "La habitación ya no está disponible para esas fechas." };
+    }
+    const pendientes = await contarPendientesVigentes(ctx.phone, ctx.hotelId);
+    if (pendientes >= MAX_PENDIENTES_POR_TELEFONO) {
+      return {
+        error:
+          `El huésped ya tiene ${pendientes} reservas pendientes de pago. ` +
+          "Antes de proponer otra tiene que pagar o cancelar alguna de las que ya tiene.",
+      };
+    }
+
+    const { pricePerNight, nights, totalPrice } = await precioDeEstadia(roomId, checkIn, checkOut);
+    const payAmount = montoAPagar(totalPrice, paymentType);
+
+    await guardarPropuesta(ctx.phone, ctx.channel, {
+      roomId, roomNumber: room.number, guestName, guestEmail, checkIn, checkOut, numGuests,
+      paymentType, totalPrice, payAmount, at: new Date().toISOString(),
+    });
+
+    return {
+      propuesta: {
+        room: room.number,
+        guestName,
+        guestEmail: guestEmail ?? null,
+        checkIn,
+        checkOut,
+        nights,
+        numGuests,
+        pricePerNight,
+        totalPrice,
+        paymentType,
+        payAmount,
+      },
+      siguientePaso:
+        "Mostrale este resumen al huésped y preguntale si lo confirma. NO llames a crear_reserva en este mismo turno: " +
+        "esperá su respuesta y, si confirma, llamá a crear_reserva con exactamente estos datos.",
+    };
+  },
+
   async crear_reserva(args, ctx) {
-    const roomIdRaw = str(args.roomId);
-    const guestName = str(args.guestName);
-    const checkIn = str(args.checkIn);
-    const checkOut = str(args.checkOut);
-    const paymentTypeRaw = str(args.paymentType);
-
-    if (!roomIdRaw || !guestName || !checkIn || !checkOut) {
-      return { error: "Faltan datos: roomId, guestName, checkIn y checkOut son obligatorios." };
-    }
-
-    const paymentType =
-      paymentTypeRaw === "DEPOSIT" || paymentTypeRaw === "FULL" ? paymentTypeRaw : undefined;
-    if (!paymentType) {
-      return { error: "paymentType debe ser 'DEPOSIT' (seña 15%) o 'FULL' (pago total)." };
-    }
-
-    const roomId = await resolveRoomId(roomIdRaw, ctx.hotelId);
-
-    // El email es opcional y secundario. Si el modelo manda algo que no parece
-    // un email, se descarta en silencio en vez de hacer fallar la reserva: el
-    // huésped puede corregirlo después y el canal principal sigue siendo
-    // WhatsApp.
-    const emailRaw = str(args.guestEmail);
-    const guestEmail = emailRaw && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailRaw)
-      ? emailRaw.toLowerCase()
-      : undefined;
+    const datos = await leerDatosDeReserva(args, ctx);
+    if ("error" in datos) return datos;
+    const { roomId, guestName, checkIn, checkOut, numGuests, paymentType } = datos;
+    let { guestEmail } = datos;
 
     // Idempotencia. El modelo a veces llama a esta herramienta dos veces con
     // los mismos datos: se adelanta y crea la reserva antes de que el huésped
@@ -369,12 +483,21 @@ const handlers: Record<string, ToolHandler> = {
     // devolvemos la que ya existe con su link de pago original.
     const existente = await buscarReservaPendiente(ctx.phone, roomId, checkIn, checkOut);
     if (existente) {
-      const cambio = cambiosRespectoDePendiente(existente, {
-        paymentType,
-        numGuests: Number(args.numGuests ?? 1),
-      });
+      const cambio = cambiosRespectoDePendiente(existente, { paymentType, numGuests });
       return cambio ? { error: cambio } : existente;
     }
+
+    // Confirmación del huésped: tiene que existir una propuesta con estos
+    // mismos datos, mostrada en un turno anterior (ver propuesta.ts).
+    const propuesta = await leerPropuesta(ctx.phone);
+    const sinConfirmar = verificarConfirmacion(
+      propuesta,
+      { roomId, guestName, checkIn, checkOut, numGuests, paymentType },
+      ctx.inicioTurno ?? new Date(),
+      new Date()
+    );
+    if (sinConfirmar) return { error: sinConfirmar };
+    guestEmail = guestEmail ?? propuesta?.guestEmail;
 
     // Límite de reservas impagas por teléfono. Cada PENDING_PAYMENT bloquea una
     // habitación hasta 24 h; sin tope, un mismo número (o un loop del modelo)
@@ -399,7 +522,7 @@ const handlers: Record<string, ToolHandler> = {
       guestPhone: ctx.phone,
       checkIn,
       checkOut,
-      numGuests: args.numGuests ?? 1,
+      numGuests,
       channel: ctx.channel,
       paymentType,
     });
@@ -412,6 +535,7 @@ const handlers: Record<string, ToolHandler> = {
     }
 
     const reservation = await createReservation(parsed.data);
+    await borrarPropuesta(ctx.phone);
     const payment = await createPaymentPreference(reservation.id, paymentType);
 
     // Mismo shape que devolvía GET /api/v1/reservations/crear, para que el
@@ -496,8 +620,12 @@ const handlers: Record<string, ToolHandler> = {
       };
     }
 
+    const antes = await prisma.reservation.findUniqueOrThrow({
+      where: { id },
+      select: { totalPrice: true },
+    });
     const updated = await updateReservation(id, parsed.data, PERFORMED_BY);
-    return {
+    const respuesta: Record<string, unknown> = {
       id: updated.id,
       code: updated.code,
       status: updated.status,
@@ -505,7 +633,40 @@ const handlers: Record<string, ToolHandler> = {
       checkIn: updated.checkIn.toISOString().slice(0, 10),
       checkOut: updated.checkOut.toISOString().slice(0, 10),
       numGuests: updated.numGuests,
+      totalPrice: updated.totalPrice ? Number(updated.totalPrice) : null,
     };
+
+    // Si cambió el total, la plata tiene que acompañar el cambio (A-19).
+    const cambioElTotal =
+      updated.totalPrice !== null && Number(updated.totalPrice) !== Number(antes.totalPrice ?? NaN);
+    if (!cambioElTotal) return respuesta;
+
+    const pago = await prisma.payment.findUnique({ where: { reservationId: id } });
+    if (updated.status === "PENDING_PAYMENT") {
+      // Impaga: el link anterior cobraría el monto viejo; se rehace.
+      const nuevo = await rehacerPreferencia(id);
+      if (nuevo) {
+        return {
+          ...respuesta,
+          paymentUrl: nuevo.paymentUrl,
+          payAmount: nuevo.payAmount,
+          expiresAt: nuevo.expiresAt,
+          aviso: "Cambió el total: mandale al huésped el link de pago nuevo; el anterior ya no sirve.",
+        };
+      }
+    } else if (pago?.status === "APPROVED") {
+      const saldo = saldoTrasModificacion(Number(updated.totalPrice), Number(pago.amount), pago.paymentType);
+      return {
+        ...respuesta,
+        pagado: Number(pago.amount),
+        ...saldo,
+        aviso:
+          saldo.aDevolver > 0
+            ? "El total bajó por debajo de lo pagado: decile al huésped que el hotel lo va a contactar por la devolución."
+            : "Informale al huésped el nuevo total y el saldo que abona en el hotel.",
+      };
+    }
+    return respuesta;
   },
 
   async cancelar_reserva(args, ctx) {

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Smoke test de las cinco herramientas del agente, contra la base real.
  *
  *   npm run agent:tools           solo lectura (no modifica nada)
@@ -143,17 +143,29 @@ async function main() {
   });
   if (conCapacidad) {
     await probar(
-      `crear_reserva con más personas que la capacidad (hab. ${conCapacidad.number}, hasta ${conCapacidad.type.maxGuests})`,
-      "crear_reserva",
+      `proponer_reserva con más personas que la capacidad (hab. ${conCapacidad.number}, hasta ${conCapacidad.type.maxGuests})`,
+      "proponer_reserva",
       { roomId: conCapacidad.id, guestName: "Prueba Agente", checkIn, checkOut,
         numGuests: conCapacidad.type.maxGuests + 3, paymentType: "DEPOSIT" },
       ctx,
       "error"
     );
     await probar(
-      "crear_reserva con ingreso en el pasado",
-      "crear_reserva",
+      "proponer_reserva con ingreso en el pasado",
+      "proponer_reserva",
       { roomId: conCapacidad.id, guestName: "Prueba Agente", checkIn: dia(-3), checkOut: dia(-1),
+        numGuests: 1, paymentType: "DEPOSIT" },
+      ctx,
+      "error"
+    );
+  }
+
+  if (conCapacidad) {
+    // Sin propuesta previa, crear_reserva no escribe nada (iteración 10).
+    await probar(
+      "crear_reserva sin propuesta confirmada no crea",
+      "crear_reserva",
+      { roomId: conCapacidad.id, guestName: "Prueba Agente", checkIn, checkOut,
         numGuests: 1, paymentType: "DEPOSIT" },
       ctx,
       "error"
@@ -182,20 +194,29 @@ async function main() {
     if (!room) {
       console.log(C.yellow("\n(sin habitaciones disponibles — se omite el ciclo de escritura)"));
     } else {
-      console.log(C.bold("\n─── Ciclo crear → modificar → cancelar ───────────"));
+      console.log(C.bold("\n─── Ciclo proponer → crear → modificar → cancelar ─"));
 
+      const datos = {
+        roomId: room.id,
+        guestName: "Prueba Agente",
+        checkIn,
+        checkOut,
+        numGuests: 2,
+        paymentType: "DEPOSIT",
+      };
+      const turno1: AgentContext = { ...ctx, inicioTurno: new Date() };
+      await probar(`proponer_reserva en hab. ${room.number} con seña`, "proponer_reserva", datos, turno1, "ok");
+      await probar("crear_reserva en el mismo turno de la propuesta falla", "crear_reserva", datos, turno1, "error");
+
+      // El huésped contesta: empieza otro turno.
+      const turno2: AgentContext = { ...ctx, inicioTurno: new Date() };
+      await probar("crear_reserva con otra modalidad que la propuesta falla", "crear_reserva",
+        { ...datos, paymentType: "FULL" }, turno2, "error");
       const creada = (await probar(
-        `crear_reserva en hab. ${room.number} con seña`,
+        "crear_reserva confirmada en un turno posterior",
         "crear_reserva",
-        {
-          roomId: room.id,
-          guestName: "Prueba Agente",
-          checkIn,
-          checkOut,
-          numGuests: 2,
-          paymentType: "DEPOSIT",
-        },
-        ctx,
+        datos,
+        turno2,
         "ok"
       )) as { code?: string; paymentUrl?: string };
 
@@ -204,15 +225,8 @@ async function main() {
       const repetida = (await probar(
         "crear_reserva repetida devuelve la misma reserva",
         "crear_reserva",
-        {
-          roomId: room.id,
-          guestName: "Prueba Agente",
-          checkIn,
-          checkOut,
-          numGuests: 2,
-          paymentType: "DEPOSIT",
-        },
-        ctx,
+        datos,
+        turno2,
         "ok"
       )) as { code?: string; yaExistia?: boolean };
 
@@ -245,6 +259,19 @@ async function main() {
             ctx,
             "ok"
           );
+          const alargada = (await probar(
+            "modificar_reserva alarga la estadía y rehace el link de pago",
+            "modificar_reserva",
+            { id: detalle.id, checkOut: dia(404) },
+            ctx,
+            "ok"
+          )) as { paymentUrl?: string; payAmount?: number; totalPrice?: number };
+          if (!alargada.paymentUrl || alargada.paymentUrl === creada.paymentUrl) {
+            fallos++;
+            console.log(C.red("    ✗ no devolvió un link de pago nuevo"));
+          } else {
+            console.log(C.green(`    ✓ total ${alargada.totalPrice}, nuevo monto ${alargada.payAmount}`));
+          }
           await probar(
             "modificar_reserva por encima de la capacidad falla",
             "modificar_reserva",
@@ -263,6 +290,13 @@ async function main() {
             "cancelar_reserva otra vez falla",
             "cancelar_reserva",
             { id: detalle.id },
+            ctx,
+            "error"
+          );
+          await probar(
+            "modificar_reserva de una reserva cancelada falla",
+            "modificar_reserva",
+            { id: detalle.id, numGuests: 1 },
             ctx,
             "error"
           );

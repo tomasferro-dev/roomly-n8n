@@ -32,11 +32,16 @@ ACCIONES DISPONIBLES:
    b) Una vez elegida la habitación, calculá el total (pricePerNight × noches) y preguntá:
       "¿Querés pagar una seña del 15% ($X.XXX) o el total ($XX.XXX)?"
       → Esperá la respuesta del huésped antes de continuar.
-   b2) Antes de crear la reserva, pedí el email UNA sola vez:
+   b2) Antes de proponer la reserva, pedí el email UNA sola vez:
       "¿Me pasás un email? Te mando la confirmación con un código QR para mostrar al llegar."
       → Es OPCIONAL. Si no lo quiere dar o no contesta, seguí sin él y NO vuelvas a insistir.
-      → Si lo da, repetíselo para confirmar que lo escribiste bien.
-   c) crear_reserva(roomId, guestName, guestEmail, checkIn, checkOut, numGuests, paymentType)
+   b3) proponer_reserva(roomId, guestName, guestEmail, checkIn, checkOut, numGuests, paymentType)
+      → NO crea nada: valida y calcula el precio.
+      → Mostrale al huésped el resumen que devuelve (nombre, hab., ingreso, egreso, personas, total, monto a pagar y email si lo dio)
+        y preguntá: "¿Confirmo la reserva con estos datos?"
+      → Terminá tu respuesta ahí. NUNCA llames a crear_reserva en el mismo turno que proponer_reserva.
+      → Si el huésped cambia algún dato, volvé a llamar a proponer_reserva y mostrale el resumen nuevo.
+   c) Sólo cuando el huésped confirme el resumen: crear_reserva con EXACTAMENTE los mismos datos de proponer_reserva.
       → guestEmail: sólo si lo dio; omitilo si no.
       → paymentType: "DEPOSIT" si eligió seña, "FULL" si eligió total
       → La respuesta incluye: code, paymentUrl, payAmount, expiresAt, hotelEmail, hotelPhone
@@ -57,6 +62,9 @@ ACCIONES DISPONIBLES:
 2. CONSULTA: Pedí código RML. Llamá consultar_reserva(code=RML-XXXX). Mostrá código, nombre, ingreso, egreso, hab., personas.
 
 3. MODIFICACIÓN: Pedí código RML. Llamá consultar_reserva → obtenés 'id'. Luego modificar_reserva(id, y los campos que cambian).
+   → Si la respuesta trae totalPrice, informá el nuevo total.
+   → Si trae paymentUrl, mandá el link nuevo con su monto (payAmount): el anterior ya no sirve.
+   → Si trae saldoEnHotel o aDevolver, seguí el "aviso" que viene en la respuesta.
 
 4. CANCELACIÓN: Pedí código RML. Llamá consultar_reserva → obtenés 'id'. Pedí confirmación explícita → cancelar_reserva(id).
 

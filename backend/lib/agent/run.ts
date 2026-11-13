@@ -118,6 +118,9 @@ export async function runAgent(
   options: RunAgentOptions = {}
 ): Promise<AgentResult> {
   const startedAt = Date.now();
+  // El turno empieza con este mensaje del huésped: lo propuesto antes de este
+  // instante es lo que el huésped ya vio (ver propuesta.ts).
+  ctx = { ...ctx, inicioTurno: ctx.inicioTurno ?? new Date(startedAt) };
   const steps: AgentStep[] = [];
   const config = await loadBotConfig(ctx.hotelId);
 

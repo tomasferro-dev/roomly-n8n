@@ -30,11 +30,13 @@ export function fechaDeCorte(dias: number, ahora = new Date()): Date {
 /** Borra conversaciones y trazas más viejas que el plazo. La llama el cron diario. */
 export async function purgarDatosVencidos(dias = diasDeRetencion()) {
   const corte = fechaDeCorte(dias);
-  const [mensajes, trazas] = await prisma.$transaction([
+  const [mensajes, trazas, sesiones] = await prisma.$transaction([
     prisma.message.deleteMany({ where: { createdAt: { lt: corte } } }),
     prisma.agentRun.deleteMany({ where: { createdAt: { lt: corte } } }),
+    // Guardan la última propuesta de reserva de cada teléfono (nombre, fechas).
+    prisma.conversationSession.deleteMany({ where: { updatedAt: { lt: corte } } }),
   ]);
-  return { mensajes: mensajes.count, trazas: trazas.count };
+  return { mensajes: mensajes.count, trazas: trazas.count, sesiones: sesiones.count };
 }
 
 /**

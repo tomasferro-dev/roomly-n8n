@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { isRoomAvailable } from "./availability.service";
 import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent } from "@/lib/calendar";
 import type { CreateReservationInput, UpdateReservationInput } from "@/lib/validations";
+import { precioDeEstadia } from "./pricing.service";
 
 /**
  * Crea la tarea de limpieza posterior al check-out.
@@ -98,7 +99,7 @@ export function violacionDeReglas(r: {
  * plan de tarifa de la reserva o, si no tiene, del plan vigente del tipo: el
  * mismo criterio con que se calcula el precio en payment.service.
  */
-async function reglasDeHabitacion(roomId: string, ratePlanId?: string | null) {
+export async function reglasDeHabitacion(roomId: string, ratePlanId?: string | null) {
   const room = await prisma.room.findUniqueOrThrow({
     where: { id: roomId },
     select: {
@@ -281,6 +282,12 @@ export async function updateReservation(
     where: { id },
   });
 
+  // Una reserva cerrada no se modifica: antes nada lo impedía y el bot podía
+  // cambiarle las fechas a una reserva cancelada.
+  if (!input.status && !ESTADOS_MODIFICABLES.includes(current.status)) {
+    throw new ReglaDeReservaError(`La reserva ${current.code} está ${ETIQUETA_ESTADO[current.status] ?? current.status} y ya no se puede modificar.`);
+  }
+
   const newRoomId = input.roomId ?? current.roomId;
   const currentCheckIn = current.checkIn.toISOString().split("T")[0];
   const newCheckIn = input.checkIn ?? currentCheckIn;
@@ -309,10 +316,18 @@ export async function updateReservation(
     }
   }
 
+  // El total depende de las noches y de la habitación: si cambian, se
+  // recalcula con la misma tarifa que al crear (pricing.service).
+  const cambiaPrecio = !!(input.checkIn || input.checkOut || input.roomId);
+  const totalPrice = cambiaPrecio
+    ? (await precioDeEstadia(newRoomId, newCheckIn, newCheckOut, current.ratePlanId)).totalPrice
+    : undefined;
+
   const updated = await prisma.$transaction(async (tx) => {
     const res = await tx.reservation.update({
       where: { id },
       data: {
+        ...(totalPrice !== undefined && { totalPrice }),
         ...(input.checkIn && { checkIn: new Date(input.checkIn) }),
         ...(input.checkOut && { checkOut: new Date(input.checkOut) }),
         ...(input.numGuests !== undefined && { numGuests: input.numGuests }),
@@ -359,7 +374,9 @@ export async function updateReservation(
 export async function cancelReservation(id: string, performedBy = "admin") {
   const current = await prisma.reservation.findUniqueOrThrow({ where: { id } });
 
-  if (["CANCELLED", "CHECKED_OUT"].includes(current.status)) {
+  // Sólo se cancela lo que todavía no empezó. Antes también se podía cancelar
+  // una reserva con el huésped ya alojado o marcada como no presentada.
+  if (!["PENDING", "PENDING_PAYMENT", "CONFIRMED"].includes(current.status)) {
     throw new Error(`Reservation is already ${current.status}`);
   }
 
@@ -388,6 +405,78 @@ export async function cancelReservation(id: string, performedBy = "admin") {
   }
 
   return updated;
+}
+
+// ─── Estados ──────────────────────────────────────────────────────────────────
+
+/** Estados en los que la reserva todavía admite cambios de fechas o personas. */
+export const ESTADOS_MODIFICABLES: string[] = ["PENDING", "PENDING_PAYMENT", "CONFIRMED", "CHECKED_IN"];
+
+export const ETIQUETA_ESTADO: Record<string, string> = {
+  PENDING_PAYMENT: "pendiente de pago",
+  CONFIRMED: "confirmada",
+  CHECKED_IN: "con el huésped alojado",
+  CHECKED_OUT: "cerrada",
+  CANCELLED: "cancelada",
+  NO_SHOW: "marcada como no presentada",
+};
+
+export type AccionDeEstado = "CHECK_IN" | "NO_SHOW" | "CHECK_OUT";
+
+/**
+ * Transiciones que hace el personal desde el panel. Función pura, probada en
+ * agent:check. Antes sólo existía "Cerrar reserva": a CHECKED_IN y a NO_SHOW
+ * no se podía llegar desde ninguna parte del sistema.
+ *
+ *   CONFIRMED  → CHECKED_IN   desde el día de ingreso
+ *   CONFIRMED  → NO_SHOW      desde el día de ingreso (libera la habitación)
+ *   CONFIRMED | CHECKED_IN → CHECKED_OUT   en cualquier momento
+ *
+ * Devuelve el estado nuevo o un motivo de rechazo.
+ */
+export function transicionDeEstado(
+  estado: string,
+  accion: AccionDeEstado,
+  checkIn: string,
+  hoy: string
+): { estado: "CHECKED_IN" | "NO_SHOW" | "CHECKED_OUT" } | { error: string } {
+  if (accion === "CHECK_OUT") {
+    return ["CONFIRMED", "CHECKED_IN"].includes(estado)
+      ? { estado: "CHECKED_OUT" }
+      : { error: "Sólo se cierra una reserva confirmada o con el huésped alojado." };
+  }
+  if (estado !== "CONFIRMED") {
+    return { error: "Sólo una reserva confirmada (pagada) puede registrar el ingreso o la no presentación." };
+  }
+  if (hoy < checkIn) {
+    return { error: `La reserva ingresa el ${checkIn}; todavía no se puede registrar.` };
+  }
+  return { estado: accion === "CHECK_IN" ? "CHECKED_IN" : "NO_SHOW" };
+}
+
+/** Aplica una transición del panel y la deja en AuditLog. */
+export async function cambiarEstado(id: string, accion: AccionDeEstado, performedBy = "admin") {
+  const current = await prisma.reservation.findUniqueOrThrow({
+    where: { id },
+    include: { hotel: { select: { timezone: true } } },
+  });
+  const r = transicionDeEstado(
+    current.status,
+    accion,
+    current.checkIn.toISOString().slice(0, 10),
+    hoyEnZona(current.hotel.timezone)
+  );
+  if ("error" in r) throw new ReglaDeReservaError(r.error);
+
+  const { hotel: _hotel, ...antes } = current;
+  void _hotel;
+  return prisma.$transaction(async (tx) => {
+    const res = await tx.reservation.update({ where: { id }, data: { status: r.estado } });
+    await tx.auditLog.create({
+      data: { reservationId: id, action: r.estado, before: antes as object, after: res as object, performedBy },
+    });
+    return res;
+  });
 }
 
 // ─── Query ────────────────────────────────────────────────────────────────────

@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import EditableGuestCell from "@/components/dashboard/EditableGuestCell";
 import ChatDrawer from "@/components/dashboard/ChatDrawer";
-import { checkoutReservation } from "@/app/dashboard/actions";
+import { checkoutReservation, cambiarEstadoReserva } from "@/app/dashboard/actions";
 
 type Reservation = {
   id: string;
@@ -41,6 +41,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
   CHECKED_OUT: { label: "Salida", variant: "outline" },
   CANCELLED: { label: "Cancelada", variant: "destructive" },
   PENDING: { label: "Pendiente", variant: "outline" },
+  PENDING_PAYMENT: { label: "Esperando pago", variant: "outline" },
   NO_SHOW: { label: "No presentó", variant: "destructive" },
 };
 
@@ -90,6 +91,13 @@ function isCheckoutOverdue(r: { checkOut: Date; status: string }): boolean {
   );
 }
 
+/** True si el día de ingreso todavía no llegó (fechas @db.Date, en UTC). */
+function isBeforeCheckIn(checkIn: Date): boolean {
+  const now = new Date();
+  const hoy = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  return hoy < new Date(checkIn).toISOString().slice(0, 10);
+}
+
 const COLSPAN = 6;
 
 export default function ReservationTable({
@@ -106,6 +114,16 @@ export default function ReservationTable({
     setCheckingOutId(id);
     startTransition(async () => {
       await checkoutReservation(id);
+      setCheckingOutId(null);
+    });
+  }
+
+  function handleEstado(id: string, accion: "CHECK_IN" | "NO_SHOW") {
+    if (accion === "NO_SHOW" && !confirm("¿Marcar la reserva como no presentada? La habitación queda libre.")) return;
+    setCheckingOutId(id);
+    startTransition(async () => {
+      const r = await cambiarEstadoReserva(id, accion);
+      if (r.error) alert(r.error);
       setCheckingOutId(null);
     });
   }
@@ -150,6 +168,9 @@ export default function ReservationTable({
             const overdue = isCheckoutOverdue(r);
             const nights = nightsBetween(r.checkIn, r.checkOut);
             const canCheckout = ["CONFIRMED", "CHECKED_IN"].includes(r.status);
+            // Ingreso y no presentación, desde el día de ingreso (el servidor
+            // lo vuelve a verificar con la zona horaria del hotel).
+            const canArrive = r.status === "CONFIRMED" && !isBeforeCheckIn(r.checkIn);
             const isProcessing = checkingOutId === r.id && isPending;
 
             return (
@@ -234,6 +255,32 @@ export default function ReservationTable({
                           {formatDateTime(r.createdAt)}
                         </div>
                         <div className="ml-auto flex items-center gap-2">
+                          {canArrive && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={isProcessing}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEstado(r.id, "CHECK_IN");
+                                }}
+                                className="text-sm bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded px-3 py-1.5 transition-colors"
+                              >
+                                Registrar ingreso
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isProcessing}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEstado(r.id, "NO_SHOW");
+                                }}
+                                className="text-sm bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-200 rounded px-3 py-1.5 transition-colors"
+                              >
+                                No se presentó
+                              </button>
+                            </>
+                          )}
                           {canCheckout && (
                             <button
                               type="button"

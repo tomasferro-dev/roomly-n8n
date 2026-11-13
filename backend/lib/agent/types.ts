@@ -15,6 +15,12 @@ export type AgentContext = {
   channel: Channel;
   /** Zona horaria del hotel; define qué día es "HOY" para el agente. */
   timezone: string;
+  /**
+   * Cuándo empezó el turno, es decir, cuándo llegó el mensaje del huésped que
+   * se está respondiendo. crear_reserva lo usa para exigir que la propuesta
+   * se haya mostrado en un turno anterior. Lo completa runAgent.
+   */
+  inicioTurno?: Date;
 };
 
 /**

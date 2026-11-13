@@ -7,6 +7,11 @@ import {
   getReservationChat as fetchReservationChat,
   type ChatMessage,
 } from "@/services/conversation.service";
+import {
+  cambiarEstado,
+  ReglaDeReservaError,
+  type AccionDeEstado,
+} from "@/services/reservation.service";
 
 // ─── Guest ────────────────────────────────────────────────────────────────────
 
@@ -72,29 +77,26 @@ export async function updateReservationGuest(
  * Called from the dashboard "Cerrar reserva" button.
  */
 export async function checkoutReservation(reservationId: string): Promise<void> {
-  const current = await prisma.reservation.findUniqueOrThrow({
-    where: { id: reservationId },
-  });
+  await cambiarEstadoReserva(reservationId, "CHECK_OUT");
+}
 
-  if (!["CONFIRMED", "CHECKED_IN"].includes(current.status)) return;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.reservation.update({
-      where: { id: reservationId },
-      data: { status: "CHECKED_OUT" },
-    });
-    await tx.auditLog.create({
-      data: {
-        reservationId,
-        action: "CHECKED_OUT",
-        before: current as object,
-        after: { ...current, status: "CHECKED_OUT" } as object,
-        performedBy: "admin",
-      },
-    });
-  });
-
+/**
+ * Registra el ingreso (CONFIRMED → CHECKED_IN), la no presentación
+ * (CONFIRMED → NO_SHOW, libera la habitación) o el cierre. Las reglas están en
+ * transicionDeEstado (reservation.service). Devuelve el motivo si no se pudo.
+ */
+export async function cambiarEstadoReserva(
+  reservationId: string,
+  accion: AccionDeEstado
+): Promise<{ error?: string }> {
+  try {
+    await cambiarEstado(reservationId, accion, "admin");
+  } catch (err) {
+    if (err instanceof ReglaDeReservaError) return { error: err.message };
+    throw err;
+  }
   revalidatePath("/dashboard");
+  return {};
 }
 
 // ─── Conversation ──────────────────────────────────────────────────────────────
