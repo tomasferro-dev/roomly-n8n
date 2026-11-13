@@ -134,4 +134,20 @@ completada sin ayuda por al menos 3 de cada 4 participantes.
 
 ## 9. Desvíos
 
-Ninguno a la fecha de la etiqueta.
+Ninguno a la fecha de la etiqueta. Registrados después:
+
+1. **Corridas interrumpidas (13/11/2026).** Con la cuota gratuita de Gemini,
+   los reintentos ante el límite por minuto llevaron cada mensaje a unos 35 s
+   y las 900 ejecuciones previstas, a unas 9 horas. Por decisión de los
+   autores se interrumpió la ejecución con 29 de los 150 mensajes corridos
+   (M001 a M029: los 10 de P01, los 10 de P02 y 9 de P03), una sola vez y sólo
+   con el modelo principal. En consecuencia: la precisión se informa sobre 29
+   mensajes de 3 participantes; no se informan la variación entre corridas
+   (P2) ni la comparación de modelos (P3); y la latencia incluye las esperas
+   por la cuota, por lo que se informa sólo como referencia. El corpus, las
+   etiquetas y los umbrales no cambiaron.
+2. **Prueba de usabilidad.** U02 hizo las tareas una primera vez en un
+   entorno local no verificable y las repitió en producción; se informan los
+   tiempos del segundo intento. Tres respuestas del SUS se completaron antes
+   de la sesión en el panel y se repitieron después; se usa la última de cada
+   participante.

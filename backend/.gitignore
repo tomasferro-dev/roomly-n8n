@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Estado temporal de la prueba de usabilidad (precios a restituir)
 scripts/eval/.usabilidad-estado.json
+
+# Base de la evaluación (branch de Neon): contiene una credencial
+.env.eval

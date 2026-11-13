@@ -1,0 +1,150 @@
+{
+ "semilla": 20261201,
+ "mapa": {
+  "K336518": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M017"
+  },
+  "K736748": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M027"
+  },
+  "K524049": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M008"
+  },
+  "K283067": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M016"
+  },
+  "K582955": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M023"
+  },
+  "K259473": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M019"
+  },
+  "K598360": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M024"
+  },
+  "K313477": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M025"
+  },
+  "K895994": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M005"
+  },
+  "K063481": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M028"
+  },
+  "K197032": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M010"
+  },
+  "K890260": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M021"
+  },
+  "K290811": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M011"
+  },
+  "K418164": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M026"
+  },
+  "K409562": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M006"
+  },
+  "K896412": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M029"
+  },
+  "K845725": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M014"
+  },
+  "K446961": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M012"
+  },
+  "K644770": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M018"
+  },
+  "K156866": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M002"
+  },
+  "K277098": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M001"
+  },
+  "K786252": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M015"
+  },
+  "K404058": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M022"
+  },
+  "K201920": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M004"
+  },
+  "K349594": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M013"
+  },
+  "K246886": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M020"
+  },
+  "K068147": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M003"
+  },
+  "K602410": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M007"
+  },
+  "K521709": {
+   "modelo": "gemini-3.1-flash-lite",
+   "corrida": 1,
+   "id": "M009"
+  }
+ }
+}
