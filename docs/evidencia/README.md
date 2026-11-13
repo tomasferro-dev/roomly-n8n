@@ -20,6 +20,8 @@ el hash coincida en cualquier sistema.
 | `prueba-titularidad_2026-10-27.json` | Control de titularidad con dos teléfonos de prueba | §5.9 |
 | `firma-meta_2026-10-27.txt` | Rechazo de firmas falsas en el webhook de producción | §5.9 |
 | `prueba-whatsapp_2026-11-05.json` | Prueba por WhatsApp de extremo a extremo: capacidad, fecha pasada, reserva con pago, reserva repetida y cancelación | §5.9 |
+| `agent-tools-lectura_*.txt` | Prueba de humo de las herramientas en modo lectura contra producción | §5.3 |
+| `seudonimizacion-trazas_2026-11-12.json` | Seudonimización de las trazas anteriores al 23/10/2026 | §3.6 |
 | `conversaciones-prueba_seudonimizadas.txt` | Conversaciones de prueba exportadas de WhatsApp | §5.6, Anexo I |
 | `clasificacion-mensajes_2026-10-27.csv` | Clasificación de los 62 mensajes del huésped | §5.6, Anexo I |
 
