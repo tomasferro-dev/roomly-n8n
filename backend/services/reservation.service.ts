@@ -50,13 +50,13 @@ export class ReglaDeReservaError extends Error {
 }
 
 /** Fecha de hoy (YYYY-MM-DD) en la zona horaria del hotel, no en UTC. */
-export function hoyEnZona(timezone: string): string {
+export function hoyEnZona(timezone: string, ahora: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: timezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(new Date());
+  }).format(ahora);
 }
 
 /**

@@ -399,7 +399,7 @@ const handlers: Record<string, ToolHandler> = {
     // crear_reserva ya rechaza un ingreso pasado, pero si la consulta lo
     // aceptaba el modelo le confirmaba disponibilidad al huésped y recién
     // fallaba al reservar. Se corta acá con el mismo criterio de fecha.
-    const hoy = hoyEnZona(ctx.timezone);
+    const hoy = hoyEnZona(ctx.timezone, ctx.ahora);
     if (checkIn < hoy) {
       return { error: `La fecha de ingreso (${checkIn}) ya pasó: hoy es ${hoy}. Pedile al huésped una fecha desde hoy.` };
     }

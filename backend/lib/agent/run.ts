@@ -110,6 +110,18 @@ export type RunAgentOptions = {
   history?: Content[];
   /** Fecha a usar como "HOY". Sólo para pruebas reproducibles. */
   now?: Date;
+  /** Modelo a usar en lugar del configurado. Sólo para la evaluación. */
+  model?: string;
+  /**
+   * Sin modelo de respaldo: si el modelo falla, la ejecución falla. En la
+   * evaluación, caer al respaldo mezclaría los resultados de dos modelos.
+   */
+  sinRespaldo?: boolean;
+  /**
+   * Ejecutor de herramientas. Por defecto, las reales. La evaluación pasa
+   * dobles que registran los argumentos sin escribir en la base ni en MP.
+   */
+  ejecutor?: typeof executeTool;
 };
 
 export async function runAgent(
@@ -120,9 +132,11 @@ export async function runAgent(
   const startedAt = Date.now();
   // El turno empieza con este mensaje del huésped: lo propuesto antes de este
   // instante es lo que el huésped ya vio (ver propuesta.ts).
-  ctx = { ...ctx, inicioTurno: ctx.inicioTurno ?? new Date(startedAt) };
+  ctx = { ...ctx, inicioTurno: ctx.inicioTurno ?? new Date(startedAt), ahora: ctx.ahora ?? options.now };
   const steps: AgentStep[] = [];
   const config = await loadBotConfig(ctx.hotelId);
+  if (options.model) config.model = options.model;
+  const ejecutar = options.ejecutor ?? executeTool;
 
   const base = {
     steps,
@@ -158,7 +172,7 @@ export async function runAgent(
       iterations = i + 1;
       const turnStart = Date.now();
 
-      const { response, model: modelUsed } = await generateWithFallback({
+      const params = {
         model: config.model,
         contents,
         config: {
@@ -167,7 +181,10 @@ export async function runAgent(
           maxOutputTokens: config.maxOutputTokens,
           tools: [{ functionDeclarations }],
         },
-      });
+      };
+      const { response, model: modelUsed } = options.sinRespaldo
+        ? { response: await generateWithRetry(params), model: config.model }
+        : await generateWithFallback(params);
       // AgentRun guarda el modelo que realmente contestó, no el configurado.
       base.model = modelUsed;
 
@@ -235,7 +252,7 @@ export async function runAgent(
           });
         } else {
           const toolStart = Date.now();
-          const ejecucion = await executeTool(name, args, ctx);
+          const ejecucion = await ejecutar(name, args, ctx);
           result = ejecucion.result;
           yaEjecutadas.set(huella, result);
 

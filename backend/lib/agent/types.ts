@@ -21,6 +21,13 @@ export type AgentContext = {
    * se haya mostrado en un turno anterior. Lo completa runAgent.
    */
   inicioTurno?: Date;
+  /**
+   * Instante que las herramientas toman como "ahora" para decidir si una
+   * fecha ya pasó. Sólo lo fija la evaluación, para que una fecha de
+   * referencia fija valga también en las herramientas; en producción es el
+   * reloj real.
+   */
+  ahora?: Date;
 };
 
 /**
