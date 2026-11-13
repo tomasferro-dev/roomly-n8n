@@ -1,0 +1,1052 @@
+[
+ {
+  "id": "M001",
+  "participante": "P01",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola buenas! Queria consultar si tienen disponibilidad para 2 personas (habitacion matrimonial) entrando el viernes 18 de diciembre y saliendo el domingo 20. La reserva seria a nombre de Lucas Fernandez y mi idea es dejar una seña para congelar el lugar. Me pasas info de tarifas y como hacemos con el pago? Gracias!"
+ },
+ {
+  "id": "M002",
+  "participante": "P01",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola que tal! Queria consultar disponibilidad para 4 personas entrando el domingo 27 de diciembre y saliendo el miercoles 30. La reserva seria a nombre de Martin Gomez y mi idea es abonar el total de la estadia ahora de una vez. Me pasas opciones de habitaciones y el link o alias para transferir? Gracias!"
+ },
+ {
+  "id": "M003",
+  "participante": "P01",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola buenas! Te consulto si tienen lugar disponible para el finde del 12 de diciembre (entrando el sabado 12 y saliendo el domingo 13). Todavia no tengo definido exactamente cuantos vamos a ser pero queria saber si les queda disponibilidad para esa fecha. Gracias!"
+ },
+ {
+  "id": "M004",
+  "participante": "P01",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola buenas! Te queria consultar tarifas y opciones de habitacion para 2 personas. Todavia no tenemos bien definidas las fechas del viaje, pero queria ir viendo precios y disponibilidad aproximada para este mes. Gracias!"
+ },
+ {
+  "id": "M005",
+  "participante": "P01",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola buenas! Te consulto si tienen lugar para 1 persona (habitacion single) para este finde, entrando el sabado 5 de diciembre y saliendo el domingo 6. Me pasas tarifa y disponibilidad? Gracias!"
+ },
+ {
+  "id": "M006",
+  "participante": "P01",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola buenas! Te consulto disponibilidad para 2 personas entrando el viernes 11 de diciembre y saliendo el lunes 14 (serian 3 noches). Me pasas tarifas y opciones de habitacion? Gracias!"
+ },
+ {
+  "id": "M007",
+  "participante": "P01",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola buenas! Te escribo porque ya tengo hecha la reserva RML-4821 y queria saber si hay posibilidad de extenderla una noche mas y salir un dia despues de lo previsto. Me confirmas si tienen disponibilidad y cuanto seria la diferencia? Gracias!"
+ },
+ {
+  "id": "M008",
+  "participante": "P01",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola buenas! Te escribo por la reserva RML-3307. Lamentablemente me surgio un inconveniente y no voy a poder viajar, asi que necesito cancelarla. Me confirmas cuando este dada de baja? Gracias!"
+ },
+ {
+  "id": "M009",
+  "participante": "P01",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola buenas! Antes de hacer una reserva queria consultarles si son pet friendly / aceptan mascotas, ya que viajaria con mi perro. Tiene algun costo adicional o algun requisito? Gracias!"
+ },
+ {
+  "id": "M010",
+  "participante": "P01",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola buenas! Todo bien? Te escribo porque queria hacer una consulta por alojamiento. Me pasas info? Gracias!"
+ },
+ {
+  "id": "M011",
+  "participante": "P02",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Buen dia! Necesito reservar una habitacion para dos personas desde el viernes 18 de diciembre hasta el domingo 20 a nombre de Sofia Alvarez. Quiero dejar una seña para asegurarla, me dicen cuanto es y a donde transfiero?"
+ },
+ {
+  "id": "M012",
+  "participante": "P02",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola! Somos un grupo de 4 amigos y queremos hacer una reserva del 27 al 30 de diciembre a nombre de Diego Peralta. Nuestra idea es pagar el total de la estadia ahora mismo, me pasan disponibilidad y medios de pago?"
+ },
+ {
+  "id": "M013",
+  "participante": "P02",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola! Queria averiguar si les queda lugar disponible para el fin de semana del 12 de diciembre, todavia no tengo confirmado cuantos vamos a viajar pero queria consultar primero si hay disponibilidad."
+ },
+ {
+  "id": "M014",
+  "participante": "P02",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Buen dia! Me podrian pasar tarifas para una habitacion doble? Aun no tenemos definidas las fechas exactas del viaje pero queremos ir averiguando precios."
+ },
+ {
+  "id": "M015",
+  "participante": "P02",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, tienen disponibilidad para una persona sola este fin de semana, entrando el sabado 5 y saliendo el domingo 6 de diciembre?"
+ },
+ {
+  "id": "M016",
+  "participante": "P02",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas! Queria consultar si tienen lugar para 2 personas entrando el viernes 11 de diciembre y quedandonos 3 noches, hasta el lunes 14."
+ },
+ {
+  "id": "M017",
+  "participante": "P02",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Tengo la reserva RML-4821 y necesitaba consultar si es posible agregar una noche mas para retirarme un dia despues de la fecha original."
+ },
+ {
+  "id": "M018",
+  "participante": "P02",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Buen dia, me comunico por la reserva RML-3307. Tuve un imprevisto y no voy a poder ir, asi que necesito cancelarla por favor."
+ },
+ {
+  "id": "M019",
+  "participante": "P02",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de avanzar con la reserva queria saber si permiten el ingreso con mascotas."
+ },
+ {
+  "id": "M020",
+  "participante": "P02",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola! Que tal? Les escribo para consultar por tarifas y disponibilidad."
+ },
+ {
+  "id": "M021",
+  "participante": "P03",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria reservar una habitacion matrimonial del viernes 18 al domingo 20 de diciembre a nombre de Camila Torres. Somos dos y queremos abonar una seña ahora, me pasas los datos para transferir?"
+ },
+ {
+  "id": "M022",
+  "participante": "P03",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buenas! Necesito hacer una reserva para 4 personas entrando el 27 de diciembre y saliendo el 30, a nombre de Facundo Ruiz. Queremos pagar el total completo en un solo pago, tienen lugar?"
+ },
+ {
+  "id": "M023",
+  "participante": "P03",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, que tal? Tendran disponibilidad para el finde del 12 de diciembre? Todavia no sabemos bien cuantos vamos a ser pero queria consultar si les queda algo libre para esa fecha."
+ },
+ {
+  "id": "M024",
+  "participante": "P03",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Me pasas info de precios para una habitacion para dos? Todavia no cerramos la fecha exacta del viaje pero queremos ir viendo opciones."
+ },
+ {
+  "id": "M025",
+  "participante": "P03",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas tardes, tienen lugar para una persona sola este sabado 5 y domingo 6 de diciembre?"
+ },
+ {
+  "id": "M026",
+  "participante": "P03",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Queria saber si tienen disponibilidad para 2 personas llegando el viernes que viene, 11 de diciembre, por 3 noches."
+ },
+ {
+  "id": "M027",
+  "participante": "P03",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola, tengo la reserva RML-4821 y queria ver si puedo estirarla un dia mas de lo que habia pedido originalmente. Me avisas si se puede?"
+ },
+ {
+  "id": "M028",
+  "participante": "P03",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola! Les escribo por la reserva RML-3307, lamentablemente la tengo que cancelar porque no voy a poder viajar."
+ },
+ {
+  "id": "M029",
+  "participante": "P03",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Buenas! Antes de reservar queria consultar si aceptan mascotas en el hotel."
+ },
+ {
+  "id": "M030",
+  "participante": "P03",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola! Como estan? Queria hacerles una consulta por alojamiento."
+ },
+ {
+  "id": "M031",
+  "participante": "P04",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola, buen día. Quisiera consultar disponibilidad y reservar una habitación para dos personas desde el viernes 18 hasta el domingo 20 de diciembre, a nombre de Valentina Soria. Mi intención es abonar una seña para confirmar, así que les pido por favor el importe y los datos bancarios. Muchas gracias."
+ },
+ {
+  "id": "M032",
+  "participante": "P04",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buen día, somos un grupo de cuatro personas y necesitamos hacer una reserva del 27 al 30 de diciembre a nombre de Nicolás Ferreyra. Quisiéramos abonar la totalidad de la estadía en un solo pago. ¿Me podrían confirmar disponibilidad y medios de pago?"
+ },
+ {
+  "id": "M033",
+  "participante": "P04",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, ¿cómo están? Quería saber si cuentan con lugar disponible para el fin de semana del 12 de diciembre. Aún no tenemos definido cuántas personas vamos a viajar, pero primero quería consultar si les queda disponibilidad en esas fechas."
+ },
+ {
+  "id": "M034",
+  "participante": "P04",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Buen día. ¿Me podrían informar tarifas para una habitación doble? Todavía no cerramos la fecha exacta del viaje, pero estamos evaluando opciones."
+ },
+ {
+  "id": "M035",
+  "participante": "P04",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, buenas tardes. ¿Tienen disponibilidad para una persona sola este fin de semana, ingresando el sábado 5 y saliendo el domingo 6 de diciembre?"
+ },
+ {
+  "id": "M036",
+  "participante": "P04",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, ¿qué tal? Quisiera averiguar si tienen lugar para dos personas ingresando el próximo viernes 11 de diciembre por tres noches."
+ },
+ {
+  "id": "M037",
+  "participante": "P04",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola, buen día. Me comunico por la reserva RML-4821 para consultar si es posible extender la estadía un día más respecto de la fecha de salida original. Aguardo confirmación."
+ },
+ {
+  "id": "M038",
+  "participante": "P04",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Buen día. Tengo hecha la reserva RML-3307 y lamentablemente por un inconveniente personal no voy a poder viajar, por lo que necesito solicitar la cancelación. Muchas gracias."
+ },
+ {
+  "id": "M039",
+  "participante": "P04",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola, ¿cómo les va? Antes de realizar una reserva quería consultar si el hotel admite mascotas."
+ },
+ {
+  "id": "M040",
+  "participante": "P04",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buen día. Me comunico para solicitar información sobre alojamiento y tarifas. Muchas gracias."
+ },
+ {
+  "id": "M041",
+  "participante": "P05",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "hola todo bien? necesito reservar para 2 personas del viernes 18 al domingo 20 de diciembre a nombre de rodrigo quiroga. quiero dejar una seña para congelar precio, me pasas alias y cuanto seria?"
+ },
+ {
+  "id": "M042",
+  "participante": "P05",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "buenas, somos 4 pibes y queremos reservar del 27 al 30 de diciembre a nombre de ezequiel bianchi. pagamos todo junto ahora, tenes lugar?"
+ },
+ {
+  "id": "M043",
+  "participante": "P05",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "hola che, te consulto si les queda algo para el finde del 12 de diciembre. todavia no se cuantos vamos a ser pero queria saber si hay disponibilidad"
+ },
+ {
+  "id": "M044",
+  "participante": "P05",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "hola, cuanto sale una habitacion para dos? todavia no tenemos fecha definida pero vamos mirando precios"
+ },
+ {
+  "id": "M045",
+  "participante": "P05",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "buenas, tenes lugar para 1 persona este sabado 5 y domingo 6 de diciembre?"
+ },
+ {
+  "id": "M046",
+  "participante": "P05",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "hola! tenes disponibilidad para 2 personas entrando el viernes que viene 11 de diciembre y quedandonos 3 noches?"
+ },
+ {
+  "id": "M047",
+  "participante": "P05",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "hola te jodo por la reserva RML-4821, necesito quedarme un dia mas de lo que habia sacado, se puede?"
+ },
+ {
+  "id": "M048",
+  "participante": "P05",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "hola como va, tengo la reserva RML-3307 y la tengo que dar de baja porque al final no viajo, me la cancelas porfa?"
+ },
+ {
+  "id": "M049",
+  "participante": "P05",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "hola una consulta antes de reservar, aceptan perros?"
+ },
+ {
+  "id": "M050",
+  "participante": "P05",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "hola buenas, info por alojamiento?"
+ },
+ {
+  "id": "M051",
+  "participante": "P08",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria consultar para reservar una habitacion doble del viernes 18 al domingo 20 de diciembre, somos 2 personas (mi pareja y yo). La reserva seria a nombre de Camila Pereyra y me gustaria pagarla con una seña, me pasan los datos para transferir?"
+ },
+ {
+  "id": "M052",
+  "participante": "P08",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buenas! Queremos hacer una reserva para 4 personas del 27 al 30 de diciembre. Seria a nombre de Lucas Ferreyra y queremos abonar el total ahora de una vez, tienen disponibilidad y me pasan el link o CBU?"
+ },
+ {
+  "id": "M053",
+  "participante": "P08",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, como va? Queria saber si tienen disponibilidad para el finde del 12 de diciembre, todavia no tengo confirmado cuantos somos pero para ir viendo si hay lugar."
+ },
+ {
+  "id": "M054",
+  "participante": "P08",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Estoy buscando reservar una habitacion para 2 personas, todavia no tenemos bien definidas las fechas pero queria ir consultando tarifas y disponibilidad en general."
+ },
+ {
+  "id": "M055",
+  "participante": "P08",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Tenes lugar para este finde, sabado 5 y domingo 6 de diciembre? Seria para mi solo, una habitacion single."
+ },
+ {
+  "id": "M056",
+  "participante": "P08",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas! Queria ver si tenes disponibilidad entrando el viernes 11 de diciembre por 3 noches, seriamos 2 personas."
+ },
+ {
+  "id": "M057",
+  "participante": "P08",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Ya tengo hecha la reserva RML-4821 y queria saber si puedo extender la estadia para irme un dia mas tarde de lo que habia reservado."
+ },
+ {
+  "id": "M058",
+  "participante": "P08",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola, buenas. Tengo la reserva RML-3307 pero me surgio un inconveniente y no voy a poder viajar, asi que necesito cancelarla por favor."
+ },
+ {
+  "id": "M059",
+  "participante": "P08",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de hacer una reserva queria consultar si aceptan mascotas en el hotel."
+ },
+ {
+  "id": "M060",
+  "participante": "P08",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buenas tardes! Te escribo porque queria hacer una consulta por alojamiento."
+ },
+ {
+  "id": "M061",
+  "participante": "P06",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola!! Cómo andan? 💕 Quería reservar una habitación para 2 personas del viernes 18 al domingo 20 de diciembre a nombre de Julieta Mendoza. Queremos dejar una seña ya así nos quedamos tranquilos! Me pasan cuánto sería y el alias? Mil gracias!!"
+ },
+ {
+  "id": "M062",
+  "participante": "P06",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola buenas! Somos un grupo de 4 amigos y queremos reservar del 27 al 30 de diciembre a nombre de Agustina Castro. La idea es abonar el total completo ahora de una vez! Tienen disponibilidad? Gracias!"
+ },
+ {
+  "id": "M063",
+  "participante": "P06",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola! Qué tal? Quería saber si tienen lugar para el finde del 12 de diciembre 🙏 Todavía no tenemos confirmado bien cuántos vamos a ser, pero quería ver primero si les queda algo disponible!"
+ },
+ {
+  "id": "M064",
+  "participante": "P06",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Me podrían pasar tarifas para una habitación doble? Todavía no definimos las fechas exactas del viaje pero estamos organizando y viendo precios! Gracias!"
+ },
+ {
+  "id": "M065",
+  "participante": "P06",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Tienen disponibilidad para 1 persona este finde, entrando el sábado 5 y saliendo el domingo 6 de diciembre?"
+ },
+ {
+  "id": "M066",
+  "participante": "P06",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola buenas! Quería consultar si tienen lugar para 2 personas llegando el viernes 11 de diciembre y quedándonos 3 noches! Gracias!"
+ },
+ {
+  "id": "M067",
+  "participante": "P06",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Qué tal? Tengo hecha la reserva RML-4821 y quería saber si hay chance de agregar una noche más para irnos un día después de lo previsto! Se podrá?"
+ },
+ {
+  "id": "M068",
+  "participante": "P06",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola! Les escribo por la reserva RML-3307 😢 Lamentablemente nos surgió un tema y no vamos a poder viajar, así que la necesito cancelar por favor!"
+ },
+ {
+  "id": "M069",
+  "participante": "P06",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de hacer una reserva quería consultarles si son pet friendly / aceptan mascotas! Gracias!"
+ },
+ {
+  "id": "M070",
+  "participante": "P06",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola! Cómo están? Quería hacerles una consulta por alojamiento!"
+ },
+ {
+  "id": "M071",
+  "participante": "P07",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola, buen dia! Te consulto por una habitacion para dos del viernes 18 al domingo 20 de diciembre. La pondria a nombre de Martin Villalba y quiero dejar una seña para asegurarla, me pasas los datos asi transfiero?"
+ },
+ {
+  "id": "M072",
+  "participante": "P07",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola! Somos 4 amigos y queremos reservar del 27 al 30 de diciembre. La reserva iria a nombre de Sofia Quiroga y la idea es pagar todo junto ahora, hay lugar? Si tienen me pasan el alias o cbu?"
+ },
+ {
+  "id": "M073",
+  "participante": "P07",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Buenas! Queria averiguar si les queda lugar para el finde del 12 de diciembre, pasa que todavia no cerramos bien cuantos vamos a ser pero queria ir viendo disponibilidad."
+ },
+ {
+  "id": "M074",
+  "participante": "P07",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola, todo bien? Te hago una consulta, quiero reservar para 2 pero todavia no definimos los dias exactos, como vienen de disponibilidad y precios?"
+ },
+ {
+  "id": "M075",
+  "participante": "P07",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas tardes! Te queda algo libre para este sabado y domingo (5 y 6 de diciembre)? Voy yo solo asi que con una habitacion simple estoy bien."
+ },
+ {
+  "id": "M076",
+  "participante": "P07",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Tienen lugar para entrar el viernes que viene (11 de dic) y quedarnos 3 noches? Seriamos dos personas."
+ },
+ {
+  "id": "M077",
+  "participante": "P07",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola, como andas? Tengo la reserva RML-4821 y queria ver si hay posibilidad de alargarla un dia mas, o sea salir un dia despues de lo que habia pedido."
+ },
+ {
+  "id": "M078",
+  "participante": "P07",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Buenas! Te escribo por la reserva RML-3307, al final se me complico y no voy a poder ir, te pido si por favor me la podes dar de baja."
+ },
+ {
+  "id": "M079",
+  "participante": "P07",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Una consulta rapida antes de reservar, ustedes son pet friendly o aceptan mascotas?"
+ },
+ {
+  "id": "M080",
+  "participante": "P07",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola! Como estan? Les escribo por aca porque queria consultar para alojarme en el hotel."
+ },
+ {
+  "id": "M081",
+  "participante": "P09",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria reservar una doble para mi y mi pareja del viernes 18 al domingo 20 de diciembre. Va a nombre de Valentina Sosa y queremos señarla ya, me dirias cuanto es y a que cuenta transfiero?"
+ },
+ {
+  "id": "M082",
+  "participante": "P09",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buenas! Necesito hacer una reserva para cuatro personas del 27 al 30 de diciembre a nombre de Diego Roldan. Queremos dejar todo pago de una vez, tienen disponibilidad y me pasan para abonar?"
+ },
+ {
+  "id": "M083",
+  "participante": "P09",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, buen dia! Tienen algo disponible para el fin de semana del 12 de diciembre? Todavia no tengo definido el numero exacto de personas pero queria ir consultando."
+ },
+ {
+  "id": "M084",
+  "participante": "P09",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Buenas tardes! Te consulto por una habitacion para dos personas, aun no tenemos cerradas las fechas pero queremos saber como manejan las reservas y valores."
+ },
+ {
+  "id": "M085",
+  "participante": "P09",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Hay lugar para este finde, sabado 5 y domingo 6 de diciembre? Seria para una sola persona."
+ },
+ {
+  "id": "M086",
+  "participante": "P09",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, como va? Queria averiguar si tienen disponibilidad ingresando el viernes 11 de diciembre por 3 noches, para dos personas."
+ },
+ {
+  "id": "M087",
+  "participante": "P09",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Tengo la reserva RML-4821 y necesito saber si le podemos sumar una noche mas para irnos un dia despues de la fecha original."
+ },
+ {
+  "id": "M088",
+  "participante": "P09",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola! Te molesto por la reserva RML-3307, lamentablemente tengo que cancelarla porque no voy a poder viajar. Me confirmas cuando este anulada?"
+ },
+ {
+  "id": "M089",
+  "participante": "P09",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Buenas! Antes de avanzar con la reserva queria confirmar si permiten el ingreso con mascotas."
+ },
+ {
+  "id": "M090",
+  "participante": "P09",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola! Que tal? Te contacto porque necesito informacion para reservar unas noches."
+ },
+ {
+  "id": "M091",
+  "participante": "P10",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Quiero reservar para dos (mi pareja y yo) del viernes 18 al domingo 20 de diciembre. Anotala a nombre de Facundo Benitez porfa, y decime como hago para transferir la seña asi ya queda cerrada."
+ },
+ {
+  "id": "M092",
+  "participante": "P10",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola, buen dia! Somos cuatro amigos buscando lugar del 27 al 30 de diciembre. La reserva seria a nombre de Agustina Molina y la idea es cancelar el total ahora mismo, hay disponibilidad? Me pasas los datos de pago?"
+ },
+ {
+  "id": "M093",
+  "participante": "P10",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, como andan? Queria saber si les queda disponibilidad para el finde del 12 de diciembre, todavia no se bien cuantos vamos a ser pero para tener una idea si hay lugar."
+ },
+ {
+  "id": "M094",
+  "participante": "P10",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Te escribo porque quiero reservar para 2 personas, todavia no definimos bien las fechas exactas pero queria saber si tienen disponibilidad y maso cuanto sale la noche."
+ },
+ {
+  "id": "M095",
+  "participante": "P10",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas! Te queda alguna habitacion para este finde, sabado 5 y domingo 6 de diciembre? Viajo yo solo."
+ },
+ {
+  "id": "M096",
+  "participante": "P10",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, que tal? Queria saber si tienen lugar para entrar el viernes 11 y quedarnos 3 noches, somos 2 personas."
+ },
+ {
+  "id": "M097",
+  "participante": "P10",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Buenas! Ya tengo hecha la reserva RML-4821 y queria consultar si hay chances de quedarnos una noche mas e irnos un dia despues."
+ },
+ {
+  "id": "M098",
+  "participante": "P10",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola! Tengo la reserva RML-3307 y al final no voy a poder viajar, por favor necesito cancelarla."
+ },
+ {
+  "id": "M099",
+  "participante": "P10",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de cerrar la reserva queria preguntarte si aceptan mascotas."
+ },
+ {
+  "id": "M100",
+  "participante": "P10",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buen dia! Te escribo porque estaba buscando alojamiento y queria hacerte una consulta."
+ },
+ {
+  "id": "M101",
+  "participante": "P11",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Te consulto por una habitacion doble para mi pareja y para mi, entrando el viernes 18 y saliendo el domingo 20 de diciembre. La reserva iria a nombre de Rocio Gimenez y queria dejar una seña hoy mismo, me pasas los datos bancarios?"
+ },
+ {
+  "id": "M102",
+  "participante": "P11",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buenas tardes! Queremos reservar para 4 personas del 27 al 30 de diciembre a nombre de Nicolas Cabrera. Nuestra idea es pagar el total de una vez, me confirmas si hay lugar y me pasas como abonar?"
+ },
+ {
+  "id": "M103",
+  "participante": "P11",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, buen dia! Queria consultar si tienen disponibilidad para el finde del 12 de diciembre, todavia no terminamos de confirmar cuantos vamos pero queria ir averiguando."
+ },
+ {
+  "id": "M104",
+  "participante": "P11",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Estoy viendo de reservar una habitacion para dos personas, aun no tenemos las fechas exactas pero queria saber que tarifas manejan."
+ },
+ {
+  "id": "M105",
+  "participante": "P11",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, como va? Te queda lugar para este sabado 5 y domingo 6 de diciembre? Seria para mi solo."
+ },
+ {
+  "id": "M106",
+  "participante": "P11",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas! Queria ver si tienen disponibilidad para entrar el viernes que viene, 11 de diciembre, por 3 noches. Somos 2 personas."
+ },
+ {
+  "id": "M107",
+  "participante": "P11",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Tengo la reserva RML-4821 y queria saber si es posible extenderla un dia mas, para hacer el check out un dia despues de lo previsto."
+ },
+ {
+  "id": "M108",
+  "participante": "P11",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Buenas! Te escribo por la reserva RML-3307, lamentablemente no voy a poder viajar asi que necesito darla de baja por favor."
+ },
+ {
+  "id": "M109",
+  "participante": "P11",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de hacer la reserva queria saber si se puede ir con mascotas."
+ },
+ {
+  "id": "M110",
+  "participante": "P11",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buenas! Queria hacerles una consulta por disponibilidad en el hotel."
+ },
+ {
+  "id": "M111",
+  "participante": "P12",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria reservar una habitacion para dos (mi pareja y yo) del viernes 18 al domingo 20 de diciembre. Ponela a nombre de Carolina Mendez por favor, y pasame el alias o CBU asi te transfiero la seña ya mismo."
+ },
+ {
+  "id": "M112",
+  "participante": "P12",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola, buen dia! Somos 4 amigos y queremos reservar del 27 al 30 de diciembre. Va a nombre de Gonzalo Acosta y queremos abonar todo de un solo pago ahora, hay lugar? Me pasas para transferir?"
+ },
+ {
+  "id": "M113",
+  "participante": "P12",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Buenas! Queria averiguar si hay disponibilidad para el fin de semana del 12 de diciembre, pasa que todavia no sabemos exactamente cuantos vamos a ir pero queria ir consultando."
+ },
+ {
+  "id": "M114",
+  "participante": "P12",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola, como andan? Quiero reservar para dos personas pero todavia no definimos bien que fechas vamos, me podrian pasar tarifas y como viene la disponibilidad?"
+ },
+ {
+  "id": "M115",
+  "participante": "P12",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Tenes disponible una habitacion para una persona para este sabado 5 y domingo 6 de diciembre?"
+ },
+ {
+  "id": "M116",
+  "participante": "P12",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas tardes! Queria consultar si tienen lugar ingresando el viernes 11 de diciembre por tres noches, para dos personas."
+ },
+ {
+  "id": "M117",
+  "participante": "P12",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Ya tengo la reserva RML-4821 y queria pedirles si le podemos agregar una noche mas para irnos un dia despues de lo que habia reservado."
+ },
+ {
+  "id": "M118",
+  "participante": "P12",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola, buen dia! Necesito cancelar la reserva RML-3307 porque al final no vamos a poder viajar, me la podran dar de baja?"
+ },
+ {
+  "id": "M119",
+  "participante": "P12",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de reservar queria hacer una consulta, aceptan mascotas?"
+ },
+ {
+  "id": "M120",
+  "participante": "P12",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buenas tardes! Los contacto porque queria consultar por tarifas y disponibilidad."
+ },
+ {
+  "id": "M121",
+  "participante": "P13",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "buenas! che te consulto, quiero dejar señada una habitacion doble para mi y mi pareja del viernes 18 al domingo 20 de dic. anotame como Ezequiel Navarro y pasame el alias que ya te transfiero"
+ },
+ {
+  "id": "M122",
+  "participante": "P13",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "hola todo bien? somos cuatro pibes y queremos cerrar del 27 al 30 de diciembre. dejala a nombre de Florencia Pazos, la idea es liquidar el total ahora mismo, tenes lugar y link de pago?"
+ },
+ {
+  "id": "M123",
+  "participante": "P13",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "che consulta, para el finde del 12 de dic les queda algo? pasa que en el grupo todavia no confirman todos cuantos somos, pero para ir sabiendo"
+ },
+ {
+  "id": "M124",
+  "participante": "P13",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "hola! mira queremos sacar para dos pero estamos re indecisos con los dias todavia, como vienen de ocupacion y cuanto anda la noche?"
+ },
+ {
+  "id": "M125",
+  "participante": "P13",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "hola! te quedo alguna single libre para este finde (sabado 5 y domingo 6)? viajo solo"
+ },
+ {
+  "id": "M126",
+  "participante": "P13",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "buen dia! ando buscando para entrar el viernes 11 de diciembre y quedarnos 3 noches, somos dos. tienen lugar?"
+ },
+ {
+  "id": "M127",
+  "participante": "P13",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "hola! ya tengo la reserva RML-4821 pero se nos alargo el viaje, habra chance de sumar una noche y hacer el check out un dia despues?"
+ },
+ {
+  "id": "M128",
+  "participante": "P13",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "buenas! che me re colgue en avisar pero tengo la reserva RML-3307 y se me cayo el viaje, te pido si me la cancelas porfa"
+ },
+ {
+  "id": "M129",
+  "participante": "P13",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "hola una duda antes de reservar, se puede llevar perro o no aceptan mascotas?"
+ },
+ {
+  "id": "M130",
+  "participante": "P13",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "hola! encontre el numero recien, queria hacerles una consulta por una estadia"
+ },
+ {
+  "id": "M131",
+  "participante": "P14",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria reservar una habitacion doble para mi pareja y yo, del viernes 18 al domingo 20 de diciembre. Anotala a nombre de Ramiro Duarte y decime cuanto seria la seña y a donde te la transfiero."
+ },
+ {
+  "id": "M132",
+  "participante": "P14",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Buenas! Somos cuatro amigos y queremos reservar del 27 al 30 de diciembre. Va a nombre de Julieta Suarez y queremos dejar todo pago de una vez, tienen disponibilidad y me pasan el CBU o link?"
+ },
+ {
+  "id": "M133",
+  "participante": "P14",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Hola, buen dia! Queria saber si les queda lugar para el fin de semana del 12 de diciembre, todavia no tengo confirmado el numero exacto de personas pero queria ir consultando."
+ },
+ {
+  "id": "M134",
+  "participante": "P14",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola! Estoy buscando reservar para dos personas, todavia no definimos bien las fechas exactas pero queria saber si tienen lugar y que valores manejan."
+ },
+ {
+  "id": "M135",
+  "participante": "P14",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas tardes! Te queda alguna habitacion disponible para este sabado 5 y domingo 6 de diciembre? Seria para una persona sola."
+ },
+ {
+  "id": "M136",
+  "participante": "P14",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Hola, como va? Queria averiguar si tienen disponibilidad entrando el viernes 11 de diciembre por 3 noches, para dos personas."
+ },
+ {
+  "id": "M137",
+  "participante": "P14",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Ya tengo hecha la reserva RML-4821 y queria saber si podemos extenderla un dia mas, para irnos un dia despues de lo que habiamos reservado."
+ },
+ {
+  "id": "M138",
+  "participante": "P14",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola! Te escribo por la reserva RML-3307, al final se nos complico y no vamos a poder viajar, por favor necesito cancelarla."
+ },
+ {
+  "id": "M139",
+  "participante": "P14",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Buenas! Antes de hacer una reserva queria consultar si permiten mascotas en el hotel."
+ },
+ {
+  "id": "M140",
+  "participante": "P14",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buen dia! Les escribo porque queria hacerles una consulta para alojarme."
+ },
+ {
+  "id": "M141",
+  "participante": "P15",
+  "tarjeta": "C1",
+  "categoria": "Completo",
+  "texto": "Hola! Queria consultar para reservar una habitacion para dos (mi pareja y yo) entrando el viernes 18 y saliendo el domingo 20 de diciembre. La pondria a nombre de Ignacio Pereyra y me gustaria pagarla con una seña, me pasas los datos para transferir?"
+ },
+ {
+  "id": "M142",
+  "participante": "P15",
+  "tarjeta": "C2",
+  "categoria": "Completo",
+  "texto": "Hola, buen dia! Queremos hacer una reserva para cuatro personas del 27 al 30 de diciembre a nombre de Melina Figueroa. Queremos abonar el total de una vez, tienen disponibilidad y me pasan el CBU o link de pago?"
+ },
+ {
+  "id": "M143",
+  "participante": "P15",
+  "tarjeta": "P1",
+  "categoria": "Parcial",
+  "texto": "Buenas! Queria consultar si tienen disponibilidad para el finde del 12 de diciembre, todavia no tengo confirmado cuantos vamos a ir pero queria ir viendo si hay lugar."
+ },
+ {
+  "id": "M144",
+  "participante": "P15",
+  "tarjeta": "P2",
+  "categoria": "Parcial",
+  "texto": "Hola, como estan? Queria reservar una habitacion para dos personas, todavia no definimos las fechas exactas pero queria ir consultando tarifas y como vienen de disponibilidad."
+ },
+ {
+  "id": "M145",
+  "participante": "P15",
+  "tarjeta": "R1",
+  "categoria": "Fecha relativa",
+  "texto": "Hola! Te queda lugar para este finde, sabado 5 y domingo 6 de diciembre? Voy yo solo, asi que busco una single."
+ },
+ {
+  "id": "M146",
+  "participante": "P15",
+  "tarjeta": "R2",
+  "categoria": "Fecha relativa",
+  "texto": "Buenas tardes! Queria saber si tienen disponibilidad entrando el viernes 11 de diciembre por tres noches, seriamos dos personas."
+ },
+ {
+  "id": "M147",
+  "participante": "P15",
+  "tarjeta": "G1",
+  "categoria": "Gestión",
+  "texto": "Hola! Tengo hecha la reserva RML-4821 y queria saber si hay posibilidad de extenderla un dia mas, para irme un dia despues de lo previsto."
+ },
+ {
+  "id": "M148",
+  "participante": "P15",
+  "tarjeta": "G2",
+  "categoria": "Gestión",
+  "texto": "Hola, buen dia! Te escribo por la reserva RML-3307 porque lamentablemente no voy a poder viajar y necesito cancelarla por favor."
+ },
+ {
+  "id": "M149",
+  "participante": "P15",
+  "tarjeta": "O1",
+  "categoria": "Otro",
+  "texto": "Hola! Antes de hacer una reserva queria saber si aceptan mascotas."
+ },
+ {
+  "id": "M150",
+  "participante": "P15",
+  "tarjeta": "O2",
+  "categoria": "Otro",
+  "texto": "Hola, buenas tardes! Los contacto porque queria hacer una consulta sobre disponibilidad y tarifas."
+ }
+]
