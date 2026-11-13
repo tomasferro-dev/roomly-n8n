@@ -41,11 +41,22 @@ function main() {
     const claves = Object.keys(filas[0] ?? {});
     const cols = Array.from({ length: 10 }, (_, i) => claves.find((c) => c.startsWith(`S${i + 1}.`))!);
     const colPart = claves.find((c) => /c[oó]digo de participante/i.test(c))!;
-    const puntajes = filas.map((f) => ({ p: f[colPart], s: puntajeSus(cols.map((c) => Number(f[c]))) }));
+    const colHora = claves.find((c) => /marca temporal/i.test(c))!;
+    // Código normalizado (U2 → U02). Si alguien respondió más de una vez, vale
+    // la última respuesta: las anteriores se listan como descartadas.
+    const codigo = (s: string) => s.trim().toUpperCase().replace(/^U(\d)$/, "U0$1");
+    const ordenadas = [...filas].sort((a, b) => a[colHora].localeCompare(b[colHora]));
+    const ultima = new Map(ordenadas.map((f) => [codigo(f[colPart]), f]));
+    const descartadas = ordenadas.filter((f) => ultima.get(codigo(f[colPart])) !== f);
+    const puntajes = [...ultima.entries()].sort().map(([p, f]) => ({ p, hora: f[colHora], s: puntajeSus(cols.map((c) => Number(f[c]))) }));
     const validos = puntajes.filter((x) => !Number.isNaN(x.s)).map((x) => x.s);
     const media = validos.reduce((a, b) => a + b, 0) / validos.length;
-    md.push("", "## System Usability Scale", "", "| Participante | SUS |", "|---|---|",
-      ...puntajes.map((x) => `| ${x.p} | ${fmt(x.s)} |`), "",
+    md.push("", "## System Usability Scale", "", "| Participante | Respondido | SUS |", "|---|---|---|",
+      ...puntajes.map((x) => `| ${x.p} | ${x.hora} | ${fmt(x.s)} |`), "",
+      ...(descartadas.length
+        ? ["Respuestas descartadas (se usa la última de cada participante): " +
+           descartadas.map((f) => `${f[colPart]} (${f[colHora]})`).join(", ") + ".", ""]
+        : []),
       `Media: **${fmt(media)}** (n = ${validos.length}); mínimo ${fmt(Math.min(...validos))}, máximo ${fmt(Math.max(...validos))}. Umbral del protocolo: 68 → **${media >= 68 ? "cumple" : "no cumple"}**.`);
   } else {
     md.push("", "(Falta datos/usabilidad-sus.csv.)");

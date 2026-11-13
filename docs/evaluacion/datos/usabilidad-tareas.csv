@@ -1,7 +1,25 @@
 participante,experiencia_hotelera,tarea,segundos,sin_ayuda,errores,comentario
-U01,,1,,,,
-U01,,2,,,,
-U01,,3,,,,
-U01,,4,,,,
-U01,,5,,,,
-U01,,difícil,,,,
+U01,no,1,3,si,0,
+U01,no,2,7,si,0,
+U01,no,3,7,si,0,
+U01,no,4,6,si,0,
+U01,no,5,29,si,1,No encontraba tarifas
+U01,no,difícil,,,,Encontrar las tarifas
+U02,no,1,3,si,0,Segundo intento (el primero fue en un entorno local no verificable)
+U02,no,2,5,si,0,Segundo intento
+U02,no,3,7,si,0,Segundo intento
+U02,no,4,6,si,0,Segundo intento
+U02,no,5,13,si,0,Segundo intento
+U02,no,difícil,,,,Nada le resultó difícil
+U03,no,1,5,si,0,
+U03,no,2,6,si,0,
+U03,no,3,7,si,0,
+U03,no,4,6,si,0,
+U03,no,5,19,si,0,
+U03,no,difícil,,,,Nada le resultó difícil
+U04,no,1,5,si,0,
+U04,no,2,5,si,0,
+U04,no,3,9,si,0,
+U04,no,4,6,si,0,
+U04,no,5,14,si,0,
+U04,no,difícil,,,,Nada le resultó difícil
